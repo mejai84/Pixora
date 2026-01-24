@@ -1,0 +1,212 @@
+ categorias
+PESCADOS Y MARISCOS
+RICURAS DE NUESTRA REGIÓN
+CORTES GRUESOS
+ESPECIALIDADES A LA BRASA
+CERDO
+ARROCES
+POLLOS
+PASTAS
+COMIDA MONTAÑERA
+LASAÑAS
+COMIDAS RÁPIDAS
+MENÚ INFANTIL
+ENTRADAS
+ASADOS
+DESAYUNOS
+ADICIONALES Y BEBIDAS
+
+
+
+
+
+
+**PESCADOS Y MARISCOS**
+Cazuela de Mariscos - $62,000
+Cazuela de Mariscos Gratinada - $68,000
+Filete de Róbalo o Pargo a la Plancha - $50,000
+Filete de Róbalo o Pargo a la Brasa - $50,000
+Filete de Róbalo o Pargo a la Milanesa - $55,000
+Filete de Róbalo o Pargo Gratinado - $65,000
+Filete de Róbalo o Pargo en salsa de Champiñones - $65,000
+Filete de Róbalo o Pargo en Salsa de Camarón - $72,000
+Filete de Róbalo o Pargo Submarino 7 Mares - $75,000
+Pargo Rojo Frito (Según Tamaño)
+Pargo Rojo Sudado (Según Tamaño)
+Sierra Frita (Según Tamaño)
+Sierra Sudada (Según Tamaño)
+Róbalo Entero (Según Tamaño)
+Pulpo al Ajillo - $52,000
+Langostino a la Brasa - $62,000
+Langostino al Ajillo - $68,000
+Langostino a la Milanesa - $70,000
+Langostino 7 Mares Submarino - $80,000
+Salmón a la Plancha - $50,000
+Salmón al Ajillo - $56,000
+Salmón en Salsa de Champiñones - $62,000
+Salmón en salsa de Camarones - $72,000
+Salmón en Salsa de Marisco - $75,000
+Camarón a la Milanesa - $65,000
+Camarón al Ajillo - $70,000
+Camarón Gratinado - $68,000
+
+
+**RICURAS DE NUESTRA REGIÓN**
+Ensopado de Bagre - $52,000
+Ensopado de Bagre a la Marinera - $58,000
+Bagre a la Plancha - $44,000
+Bagre a la Brasa - $44,000
+Bagre a la Milanesa - $47,000
+Bagre Medallón Frito - $42,000
+Bagre a la Criolla - $47,000
+Bagre Gratinado - $56,000
+Bagre en Salsa de Mariscos - $60,000
+Bagre en Salsa de Champiñones - $55,000
+Bagre en Salsa de Langostinos - $78,000
+Bocachico Frito (Según Tamaño) - $
+Cachama Frita - $
+Tilapia Frito - $
+
+**CORTES GRUESOS**
+Churrasco Argentino - $42,000
+Churrasco a la Italiana - $48,000
+Churrasco al Caballo - $48,000
+Churrasco al Ajo - $47,000
+Churrasco de Punta de Anca - $50,000
+Churrasco de Solomito - $50,000
+Churrasco a la Mexicana - $48,000
+
+**ESPECIALIDADES A LA BRASA**
+Lengua a la Brasa - $40,000
+Lengua a la Criolla - $46,000
+Lengua en Salsa de Champiñones - $46,000
+Lengua al Ajillo - $44,000
+Sobrebarriga a la Brasa - $42,000
+Picada a la Carri - $75,000
+Super Parrilla - $75,000
+
+**CERDO**
+Gran Rafa de Cerdo - $30,000
+Cañón de Cerdo - $38,000
+Super Costilla BBQ - $40,000
+Chuleta de Cerdo a la Brasa - $38,000
+Lomito de Cerdo a la Milanesa - $35,000
+Lomito de Cerdo en Salsa de Champiñones - $38,000
+
+**ARROCES**
+Arroz con Pollo y Verduras - $35,000
+Arroz con Cerdo - $37,000
+Arroz Oriental - $40,000
+Arroz Cubano - $40,000
+Arroz a la Marinera - $48,000
+Arroz con Camarón - $48,000
+
+**POLLOS**
+Pechuga a la Brasa Deshuesada - $34,000
+Pollo a la Milanesa - $38,000
+Filete de Pollo a la Milanesa - $38,000
+Pollo Hawaiano - $40,000
+Pollo Gratinado Tres Quesos - $43,000
+Pollo a la Italiana - $43,000
+Pollo en Salsa de Champiñones - $40,000
+Pollo al Ajillo - $40,000
+Pollo Agridulce - $38,000
+
+**PASTAS**
+Napolitana - $26,000
+Boloñesa - $30,000
+Pollo - $32,000
+Carbonara - $33,000
+Champiñones - $33,000
+Camarones - $40,000
+7 Mares - $40,000
+
+**COMIDA MONTAÑERA**
+Bandeja Paisa - $42,000
+Cazuela de Frijol - $33,000
+Arriero - $35,000
+Cazuela Gran Rafa - $36,000
+Cazuela Mexicana - $36,000
+Chicharronada - $40,000
+
+**LASAÑAS**
+Res - $28,000
+Pollo - $28,000
+Mixta - $32,000
+Especial - $36,000
+
+**COMIDAS RÁPIDAS**
+SalchiPapas - $17,000
+SalchiPollos - $20,000
+SalchiCarne - $20,000
+SalchiRanchera - $20,000
+Hamburguesa Sencilla - $22,000
+Hamburguesa Doble - $25,000
+Hamburguesa de la Casa - $30,000
+
+**MENÚ INFANTIL**
+todo el menu tiene de guarnición: Papitas a la francesa
+Nugets de Pollo - $24,000
+Planchita de Pollo (Pechuga) - $24,000
+Baby Beef Junior - $24,000
+Filete de Pollo a la Milanesa - $24,000
+Churrasquito Argentino - $24,000
+
+**ENTRADAS**
+Crema de Cebolla - $15,000
+Crema de Pollo - $15,000
+Crema de Champiñones - $16,000
+Crema de Camarón - $24,000
+Crema de Camarón Gran Rafa - $25,000
+Patacón con Suero - $16,000
+Patacón con Hogao - $16,000
+Yuca frita con Suero - $16,000
+Yuca Frita con Hogao - $16,000
+Platanitos Chips con Suero - $16,000
+Platanitos Chips con Hogao - $18,000
+
+**ASADOS**
+Carne Gran Rafa de Res - $33,000
+Punta de Anca Mediana - $42,000
+Punta de Anca Especial - $45,000
+Baby Beef (Solomito fino 400gr) - $44,000
+Solomito Hawaiano - $40,000
+Solomito a la Pimienta - $40,000
+Solomito Gratinado de tres Quesos - $42,000
+Solomito en Salsa de Champiñones - $42,000
+Fillet Mignon - $45,000
+Steak Pimienta - $45,000
+
+
+
+
+**DESAYUNOS**
+CALENTADO CON HUEVOS PATACONES - $17,500
+CALENTADO CON HUEVOS AREPA - $15,500
+CALENTADO CON RES, CERDO O PECHUGA PATACONES - $19,500
+CALENTADO CON RES, CERDO O PECHUGA AREPA - $18,000
+HUEVOS RANCHEROS PATACONES - $19,500
+HUEVOS REVUELTOS CON O SIN ALIÑOS PATACONES - $18,500
+HUEVOS REVUELTOS CON O SIN ALIÑOS AREPA - $13,000
+HUEVOS A LA CACEROLA (FRITO)
+PATACONES - $14,500
+AREPA - $12,500
+CARNE DE RES O CERDO AL BISTEC
+CARNE DE RES O CERDO AL BISTEC PAPA O YUCA AL VAPOR $19,500
+CALENTADO CON CHICHARRON PATACONES $22,500
+OMELETTE $19.500
+
+**ADICIONALES Y BEBIDAS**
+HUEVOS REVUELTOS - $8,000
+CALENTADO - $4,000
+PATACONES X 4 - $4,000
+AREPA TELA - $1,500
+QUESO COSTEÑO - $4,000
+QUESO MOZARELLA - $3,500
+PAN - $1,500
+CHOCOLATE - $4,500
+CAFÉ CON LECHE - $4,500
+TINTO - $1,500
+AROMÁTICA - $1,500
+MILO FRIO - $10,000
+MILO CALIENTE - $6,000

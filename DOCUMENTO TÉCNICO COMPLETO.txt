@@ -1,0 +1,101 @@
+Actúa como arquitecto principal de un software POS comercial de nivel enterprise.
+
+Contexto del proyecto:
+- Tipo: Software POS modular
+- Modelo: SaaS multi-cliente
+- Sectores: Restaurantes, bares y retail
+- Enfoque: Control operativo, antifraude, escalabilidad
+- Arquitectura: Backend centralizado + POS cliente (web / app)
+- Operación: Online con soporte offline
+
+Objetivo:
+Generar el DOCUMENTO TÉCNICO COMPLETO del sistema, coherente entre todos los módulos,
+sin contradicciones internas y con nivel suficiente para que un equipo de desarrollo
+pueda implementarlo sin tomar decisiones ambiguas.
+
+Estructura obligatoria del documento:
+
+1. Visión general del sistema
+   - Alcance
+   - Principios de diseño
+   - Supuestos operativos
+
+2. Arquitectura general
+   - Componentes (frontend, backend, sync, offline)
+   - Comunicación
+   - Gestión de estados críticos
+
+3. Módulos del sistema
+   Para CADA módulo (uno por sección):
+   - Objetivo
+   - Responsabilidades
+   - Pantallas exactas
+   - Flujos principales
+   - Validaciones técnicas (frontend / backend)
+   - Reglas de negocio innegociables
+   - Casos límite reales (fraude interno incluido)
+   - Flujo offline (si aplica)
+   - Eventos de auditoría
+
+   Módulos obligatorios:
+   - Autenticación y sesiones
+   - Usuarios y roles
+   - Turnos
+   - Caja y pagos
+   - Ventas (TPV / POS)
+   - Productos y menú
+   - Inventario
+   - Mesas y salón
+   - Clientes y fidelización
+   - Cocina y producción
+   - Reportes y analítica
+   - Auditoría y seguridad
+   - Delivery e integraciones
+
+4. Modelo de datos
+   - Tablas principales
+   - Relaciones
+   - Restricciones críticas
+   - Campos obligatorios
+
+5. API
+   - Endpoints por módulo
+   - Métodos
+   - Validaciones globales
+   - Middleware de seguridad
+
+6. Flujo offline y sincronización
+   - Qué se permite
+   - Qué se bloquea
+   - Resolución de conflictos
+   - Integridad de datos
+
+7. Seguridad y antifraude
+   - Escenarios reales
+   - Controles técnicos
+   - Alertas automáticas
+
+8. Auditoría
+   - Qué se registra
+   - Cuándo
+   - Inmutabilidad
+
+9. Escalabilidad y multi-sucursal
+   - Multi-caja
+   - Multi-turno
+   - Multi-usuario concurrente
+
+10. Riesgos técnicos y mitigaciones
+
+Requisitos de redacción:
+- Lenguaje técnico, claro y directo
+- Sin ejemplos genéricos
+- Sin opiniones
+- Sin suposiciones implícitas
+- Todo comportamiento crítico debe quedar definido
+
+Resultado esperado:
+Un documento técnico completo, estructurado, coherente y listo para implementación real.
+
+Continúa exactamente desde el punto donde quedaste, sin resumir.
+
