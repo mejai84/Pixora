@@ -3,24 +3,30 @@
 import { useEffect, useState } from 'react'
 import {
     Home,
-    DollarSign,
     Image as ImageIcon,
     Layout,
     Calculator,
     Zap,
-    Crown,
-    ShoppingCart,
-    Gift,
-    History,
-    LogOut,
     Plus,
     Trash2,
-    CheckCircle2,
     Settings,
-    Key,
-    ArrowLeft
+    Store,
+    ChevronDown,
+    Check,
+    X,
+    Search,
+    Target,
+    Activity,
+    Truck
 } from 'lucide-react'
 import { supabase, type Analysis } from '@/lib/supabase'
+
+interface UserStore {
+    id: string
+    name: string
+    url: string
+    platform: string
+}
 
 interface Props {
     onLoadAnalysis: (analysis: Analysis) => void
@@ -37,6 +43,96 @@ function formatDate(dateStr: string) {
 export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onViewChange }: Props) {
     const [analyses, setAnalyses] = useState<Analysis[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Store selector state
+    const [stores, setStores] = useState<UserStore[]>([])
+    const [activeStoreId, setActiveStoreId] = useState<string>('')
+    const [storeDropdownOpen, setStoreDropdownOpen] = useState(false)
+    const [showAddStore, setShowAddStore] = useState(false)
+    const [newStoreName, setNewStoreName] = useState('')
+    const [newStoreUrl, setNewStoreUrl] = useState('')
+    const [newStorePlatform, setNewStorePlatform] = useState('shopify')
+
+    const activeStore = stores.find(s => s.id === activeStoreId) || stores[0]
+
+    // Persistence handled via Supabase
+    useEffect(() => {
+        const fetchInitial = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data } = await supabase.from('user_stores').select('*').order('created_at', { ascending: true })
+            if (data && data.length > 0) {
+                setStores(data)
+                const active = data.find((s: any) => s.is_active)
+                if (active) setActiveStoreId(active.id)
+                else setActiveStoreId(data[0].id)
+            }
+        }
+        fetchInitial()
+    }, [])
+
+    const handleAddStore = async () => {
+        if (!newStoreName.trim()) return
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: inserted } = await supabase
+            .from('user_stores')
+            .insert({
+                user_id: user.id,
+                name: newStoreName,
+                url: newStoreUrl,
+                platform: newStorePlatform,
+                is_active: true
+            })
+            .select()
+            .single()
+
+        if (inserted) {
+            // Deactivate others
+            await supabase.from('user_stores').update({ is_active: false }).neq('id', inserted.id)
+
+            setStores(prev => [...prev.map(s => ({ ...s, is_active: false })), inserted])
+            setActiveStoreId(inserted.id)
+            setNewStoreName('')
+            setNewStoreUrl('')
+            setShowAddStore(false)
+            setStoreDropdownOpen(false)
+        }
+    }
+
+    const switchStore = async (id: string) => {
+        setActiveStoreId(id)
+        setStoreDropdownOpen(false)
+        await supabase.from('user_stores').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('user_stores').update({ is_active: true }).eq('id', id)
+    }
+
+    const handleDeleteStore = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation()
+        if (stores.length <= 1) return
+
+        await supabase.from('user_stores').delete().eq('id', id)
+        setStores(prev => prev.filter(s => s.id !== id))
+        if (activeStoreId === id) {
+            const next = stores.find(s => s.id !== id)
+            if (next) {
+                setActiveStoreId(next.id)
+                await supabase.from('user_stores').update({ is_active: true }).eq('id', next.id)
+            }
+        }
+    }
+
+    const getPlatformIcon = (platform: string) => {
+        switch (platform) {
+            case 'shopify': return '🟢'
+            case 'woocommerce': return '🟣'
+            case 'tiendanube': return '☁️'
+            case 'custom': return '🌐'
+            default: return '🏪'
+        }
+    }
 
     const loadAnalyses = async () => {
         const { data } = await supabase
@@ -64,122 +160,227 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
         setAnalyses(prev => prev.filter(a => a.id !== id))
     }
 
+    const moduleItems = [
+        { id: 'analyzer', label: 'Panel Central', icon: Home },
+        { id: 'product_analysis', label: 'Análisis Producto', icon: Search },
+        { id: 'campaigns', label: 'Campañas', icon: Target },
+        { id: 'simulator', label: 'Control Diario', icon: Calculator },
+        { id: 'operations', label: 'Operaciones', icon: Activity },
+        { id: 'logistics', label: 'Logística', icon: Truck },
+        { id: 'banners', label: 'Banner Studio', icon: ImageIcon },
+        { id: 'landings', label: 'Landing Factory', icon: Layout },
+        { id: 'settings', label: 'Ajustes', icon: Settings },
+    ]
+
     return (
-        <aside className="w-[320px] max-w-[90vw] flex-shrink-0 flex flex-col bg-white text-gray-700 h-full overflow-y-auto custom-scrollbar border-r border-gray-100 shadow-xl shadow-gray-200/50 z-30">
-            {/* Header / Logo */}
-            <div className="pl-14 pr-10 py-12 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF6B6B] flex items-center justify-center p-1 shadow-xl shadow-red-100 rotate-3">
-                    <Zap className="text-white w-7 h-7 fill-white" />
+        <aside className="sidebar custom-scrollbar">
+            {/* Logo */}
+            <div className="sidebar-logo">
+                <div className="sidebar-logo-icon">
+                    <Zap size={18} className="fill-white" />
                 </div>
-                <div className="flex flex-col">
-                    <span className="font-black text-2xl tracking-tighter text-[#1a1a2e] leading-none uppercase italic">Pixora</span>
-                    <span className="text-[10px] font-black text-[#FF6B6B] tracking-[0.3em] mt-1.5 opacity-80">BY PARGO ROJO</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="sidebar-logo-text">PIXORA</span>
+                    <span className="sidebar-logo-sub">BY PARGO ROJO</span>
                 </div>
             </div>
 
-            {/* Modo Básico Section - Main focus */}
-            <div className="flex-1 pl-12 pr-6 space-y-10">
-                <div>
-                    <p className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8 opacity-60">SISTEMA CORE</p>
-                    <div className="space-y-4">
-                        <button
-                            onClick={() => onViewChange('analyzer')}
-                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeView === 'analyzer' ? 'bg-[#1a1a2e] text-white shadow-2xl shadow-slate-900/20 scale-[1.02]' : 'hover:bg-gray-50 text-gray-400 hover:text-[#1a1a2e]'}`}
-                        >
-                            <Home size={18} className={activeView === 'analyzer' ? 'text-[#FF6B6B]' : ''} />
-                            Panel Central
-                        </button>
-                        <button
-                            onClick={() => onViewChange('banners')}
-                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeView === 'banners' ? 'bg-[#FF6B6B] text-white shadow-2xl shadow-red-500/20 scale-[1.02]' : 'hover:bg-gray-50 text-gray-400 hover:text-[#1a1a2e]'}`}
-                        >
-                            <ImageIcon size={18} />
-                            Banner Studio
-                        </button>
-                        <button
-                            onClick={() => onViewChange('landings')}
-                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeView === 'landings' ? 'bg-[#FF6B6B] text-white shadow-2xl shadow-red-500/20 scale-[1.02]' : 'hover:bg-gray-50 text-gray-400 hover:text-[#1a1a2e]'}`}
-                        >
-                            <Layout size={18} />
-                            Landing Factory
-                        </button>
-                        <button
-                            onClick={() => onViewChange('simulator')}
-                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeView === 'simulator' ? 'bg-[#FF6B6B] text-white shadow-2xl shadow-red-500/20 scale-[1.02]' : 'hover:bg-gray-50 text-gray-400 hover:text-[#1a1a2e]'}`}
-                        >
-                            <Calculator size={18} />
-                            Profit Calc
-                        </button>
-                        <button
-                            onClick={() => onViewChange('settings')}
-                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeView === 'settings' ? 'bg-[#1a1a2e] text-white shadow-2xl shadow-slate-900/20 scale-[1.02]' : 'hover:bg-gray-50 text-gray-400 hover:text-[#1a1a2e] group'}`}
-                        >
-                            <Settings size={18} className={`${activeView === 'settings' ? 'text-[#FF6B6B]' : 'text-gray-400 group-hover:rotate-45'} transition-transform`} />
-                            Ajustes IA
-                        </button>
+            {/* Store Selector */}
+            <div style={{ padding: '0 12px', marginBottom: 8, position: 'relative' }}>
+                <button
+                    onClick={() => setStoreDropdownOpen(!storeDropdownOpen)}
+                    style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 12px', borderRadius: 8,
+                        background: storeDropdownOpen ? '#f0faf0' : '#fafafa',
+                        border: `1px solid ${storeDropdownOpen ? '#4CAF50' : '#eee'}`,
+                        cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left'
+                    }}
+                >
+                    <span style={{ fontSize: 16 }}>{getPlatformIcon(activeStore?.platform || '')}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {activeStore?.name || 'Seleccionar tienda'}
+                        </div>
+                        <div style={{ fontSize: 10, color: '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {activeStore?.url || 'Sin URL'}
+                        </div>
                     </div>
-                </div>
+                    <ChevronDown size={14} color="#999" style={{
+                        transition: 'transform 0.2s',
+                        transform: storeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        flexShrink: 0
+                    }} />
+                </button>
 
-                {/* History Section */}
-                <div className="pt-10 border-t border-gray-100">
-                    <div className="flex items-center gap-3 px-3 mb-8">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B6B] animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Recientes</span>
-                    </div>
-
-                    <div className="space-y-3">
-                        {loading ? (
-                            [...Array(2)].map((_, i) => <div key={i} className="h-14 bg-gray-50 rounded-2xl animate-pulse mx-2" />)
-                        ) : (
-                            analyses.map(analysis => (
+                {/* Dropdown */}
+                {storeDropdownOpen && (
+                    <div style={{
+                        position: 'absolute', top: '100%', left: 12, right: 12,
+                        background: 'white', border: '1px solid #eee', borderRadius: 10,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)', zIndex: 100,
+                        marginTop: 4, overflow: 'hidden', animation: 'fadeIn 0.2s ease'
+                    }}>
+                        {/* Store list */}
+                        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                            {stores.map(store => (
                                 <div
-                                    key={analysis.id}
-                                    onClick={() => handleLoad(analysis.id)}
-                                    className="group flex items-center justify-between px-6 py-4 rounded-2xl hover:bg-red-50/50 cursor-pointer transition-all border border-transparent hover:border-red-100/50"
+                                    key={store.id}
+                                    onClick={() => switchStore(store.id)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 10,
+                                        padding: '10px 14px', cursor: 'pointer',
+                                        background: store.id === activeStoreId ? '#f0faf0' : 'transparent',
+                                        transition: 'background 0.15s',
+                                        borderBottom: '1px solid #f8f8f8'
+                                    }}
+                                    onMouseEnter={e => { if (store.id !== activeStoreId) e.currentTarget.style.background = '#fafafa' }}
+                                    onMouseLeave={e => { if (store.id !== activeStoreId) e.currentTarget.style.background = 'transparent' }}
                                 >
-                                    <span className="text-[11px] font-bold uppercase tracking-tight truncate max-w-[170px] text-gray-500 group-hover:text-[#1a1a2e]">
-                                        {analysis.product_name || 'Análisis S/N'}
-                                    </span>
-                                    <Trash2 size={14} className="text-gray-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all transform hover:scale-110" onClick={(e) => handleDelete(e, analysis.id)} />
+                                    <span style={{ fontSize: 14 }}>{getPlatformIcon(store.platform)}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 12, fontWeight: 600, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{store.name}</div>
+                                        <div style={{ fontSize: 10, color: '#999' }}>{store.url || 'Sin URL'}</div>
+                                    </div>
+                                    {store.id === activeStoreId && <Check size={14} color="#4CAF50" style={{ flexShrink: 0 }} />}
+                                    {stores.length > 1 && (
+                                        <Trash2
+                                            size={12}
+                                            style={{ opacity: 0.3, flexShrink: 0, cursor: 'pointer' }}
+                                            onClick={(e) => handleDeleteStore(e, store.id)}
+                                            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                            onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
+                                        />
+                                    )}
                                 </div>
-                            ))
-                        )}
+                            ))}
+                        </div>
 
-                        <button
-                            onClick={onNewAnalysis}
-                            className="w-full mt-8 flex items-center justify-center gap-3 py-5 px-5 rounded-2xl bg-[#1a1a2e] hover:bg-[#2a2a4e] transition-all text-[10px] font-black text-white uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95"
-                        >
-                            <Plus size={16} className="text-[#FF6B6B]" />
-                            Analizar Nuevo
-                        </button>
+                        {/* Add new store inline form */}
+                        {showAddStore ? (
+                            <div style={{ padding: 12, borderTop: '1px solid #eee', background: '#fafafa' }}>
+                                <input
+                                    value={newStoreName}
+                                    onChange={e => setNewStoreName(e.target.value)}
+                                    placeholder="Nombre de la tienda"
+                                    className="input-field"
+                                    style={{ marginBottom: 6, fontSize: 12, padding: '8px 10px' }}
+                                    autoFocus
+                                />
+                                <input
+                                    value={newStoreUrl}
+                                    onChange={e => setNewStoreUrl(e.target.value)}
+                                    placeholder="URL (ej: mi-tienda.myshopify.com)"
+                                    className="input-field"
+                                    style={{ marginBottom: 6, fontSize: 12, padding: '8px 10px' }}
+                                />
+                                <select
+                                    value={newStorePlatform}
+                                    onChange={e => setNewStorePlatform(e.target.value)}
+                                    className="input-field"
+                                    style={{ marginBottom: 8, fontSize: 12, padding: '8px 10px' }}
+                                >
+                                    <option value="shopify">🟢 Shopify</option>
+                                    <option value="woocommerce">🟣 WooCommerce</option>
+                                    <option value="tiendanube">☁️ Tienda Nube</option>
+                                    <option value="custom">🌐 Personalizado</option>
+                                </select>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    <button
+                                        onClick={handleAddStore}
+                                        style={{
+                                            flex: 1, padding: '6px 12px', borderRadius: 6,
+                                            background: '#4CAF50', color: 'white', border: 'none',
+                                            fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                                        }}
+                                    >
+                                        Crear
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowAddStore(false); setNewStoreName(''); setNewStoreUrl('') }}
+                                        style={{
+                                            padding: '6px 10px', borderRadius: 6,
+                                            background: '#f5f5f5', border: 'none',
+                                            fontSize: 11, color: '#999', cursor: 'pointer'
+                                        }}
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowAddStore(true)}
+                                style={{
+                                    width: '100%', padding: '10px 14px', background: 'transparent',
+                                    border: 'none', borderTop: '1px solid #eee',
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    fontSize: 12, fontWeight: 600, color: '#4CAF50',
+                                    cursor: 'pointer', transition: 'background 0.15s'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f0faf0'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <Plus size={14} /> Agregar Tienda
+                            </button>
+                        )}
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Profile / Logout at Bottom */}
-            <div className="mt-auto p-12 border-t border-gray-100 bg-gray-50/30">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-lg font-black text-[#1a1a2e] border border-gray-100 shadow-sm relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-red-50 w-0 group-hover:w-full transition-all duration-300" />
-                            <span className="relative z-10">J</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-base font-black text-[#1a1a2e] tracking-tighter leading-none">Administrador</span>
-                            <span className="text-[10px] font-black text-[#FF6B6B] uppercase tracking-widest mt-1.5 opacity-80">VERIFICADO</span>
-                        </div>
-                    </div>
+            {/* Navigation */}
+            <nav className="sidebar-nav">
+                {/* Module items */}
+                {moduleItems.map(item => (
                     <button
-                        onClick={async () => {
-                            await supabase.auth.signOut()
-                            window.location.href = '/login'
-                        }}
-                        className="p-3.5 rounded-2xl hover:bg-red-500 text-gray-400 hover:text-white transition-all border border-transparent hover:shadow-lg hover:shadow-red-200 group"
-                        title="Cerrar Sesión"
+                        key={item.id}
+                        onClick={() => { onViewChange(item.id); setStoreDropdownOpen(false) }}
+                        className={`sidebar-item ${activeView === item.id ? 'active' : ''}`}
                     >
-                        <LogOut size={20} className="group-hover:rotate-12 transition-transform" />
+                        <item.icon size={16} />
+                        {item.label}
                     </button>
-                </div>
+                ))}
+
+                {/* Recent analyses */}
+                <div className="sidebar-section-title">Recientes</div>
+                {loading ? (
+                    [...Array(2)].map((_, i) => (
+                        <div key={i} style={{ height: 32, background: '#f5f5f5', borderRadius: 6, margin: '4px 8px', animation: 'fadeIn 0.5s ease' }} />
+                    ))
+                ) : (
+                    analyses.map(analysis => (
+                        <div
+                            key={analysis.id}
+                            onClick={() => handleLoad(analysis.id)}
+                            className="sidebar-item"
+                            style={{ justifyContent: 'space-between', fontSize: 12 }}
+                        >
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>
+                                {analysis.product_name || 'Análisis S/N'}
+                            </span>
+                            <Trash2
+                                size={12}
+                                style={{ opacity: 0.3, flexShrink: 0 }}
+                                onClick={(e) => handleDelete(e, analysis.id)}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.3')}
+                            />
+                        </div>
+                    ))
+                )}
+            </nav>
+
+            {/* Bottom section */}
+            <div className="sidebar-bottom">
+                <button
+                    onClick={onNewAnalysis}
+                    className="sidebar-bottom-btn"
+                    style={{ background: '#4CAF50' }}
+                >
+                    <Plus size={14} />
+                    Analizar Nuevo
+                </button>
             </div>
         </aside>
     )
