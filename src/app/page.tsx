@@ -39,7 +39,7 @@ import CampaignsView from '@/components/CampaignsView'
 import OperationsView from '@/components/OperationsView'
 import LogisticsView from '@/components/LogisticsView'
 
-interface WizardData {
+export interface WizardData {
   url: string
   productInfo: any
   salesAngles: SalesAngle[]
