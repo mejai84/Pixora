@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import {
     Search, Zap, Shield, Target, Plus, Trash2,
     Save, FileText, CheckCircle2, XCircle, ChevronDown,
-    Link as LinkIcon, Edit3, BarChart, Settings, List, Info, MousePointer2
+    Link as LinkIcon, Edit3, BarChart, Settings, List, Info, MousePointer2,
+    Activity
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -51,6 +52,7 @@ interface ProductAnalysis {
 export default function ProductAnalysisView() {
     const [products, setProducts] = useState<ProductAnalysis[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -154,27 +156,64 @@ export default function ProductAnalysisView() {
         }
     }
 
-    const updateProduct = async (id: string, updates: Partial<ProductAnalysis>) => {
+    const [isSaving, setIsSaving] = useState(false)
+    const [saveStatus, setSaveStatus] = useState<string | null>(null)
+
+    const handleManualSave = async () => {
+        if (!activeProduct) return
+        setIsSaving(true)
+        setSaveStatus('Guardando...')
+
+        try {
+            const dbUpdates: any = {
+                name: activeProduct.name,
+                ad_links: activeProduct.adLinks,
+                supplier_price: activeProduct.supplierPrice,
+                selling_price: activeProduct.sellingPrice,
+                dropi_id: activeProduct.dropiId,
+                angles: activeProduct.angles,
+                competitor: activeProduct.competitor,
+                technical: activeProduct.technical
+            }
+
+            const { error } = await supabase
+                .from('winning_products')
+                .update(dbUpdates)
+                .eq('id', activeProduct.id)
+
+            if (error) throw error
+            setSaveStatus('✓ ¡Guardado!')
+            setTimeout(() => setSaveStatus(null), 3000)
+        } catch (error: any) {
+            console.error('Error saving:', error)
+            setSaveStatus('Error')
+            alert('Error al guardar: ' + error.message)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const updateProductLocal = (id: string, updates: Partial<ProductAnalysis>) => {
         setProducts(products.map(p => p.id === id ? { ...p, ...updates } : p))
-
-        const dbUpdates: any = {}
-        if (updates.name !== undefined) dbUpdates.name = updates.name
-        if (updates.adLinks !== undefined) dbUpdates.ad_links = updates.adLinks
-        if (updates.supplierPrice !== undefined) dbUpdates.supplier_price = updates.supplierPrice
-        if (updates.sellingPrice !== undefined) dbUpdates.selling_price = updates.sellingPrice
-        if (updates.dropiId !== undefined) dbUpdates.dropi_id = updates.dropiId
-        if (updates.angles !== undefined) dbUpdates.angles = updates.angles
-        if (updates.competitor !== undefined) dbUpdates.competitor = updates.competitor
-        if (updates.technical !== undefined) dbUpdates.technical = updates.technical
-
-        await supabase.from('winning_products').update(dbUpdates).eq('id', id)
     }
 
     const deleteProduct = async (id: string) => {
-        if (confirm('¿Eliminar este análisis?')) {
-            await supabase.from('winning_products').delete().eq('id', id)
-            setProducts(products.filter(p => p.id !== id))
-            if (activeId === id) setActiveId(products[0]?.id || null)
+        if (!confirm('¿Seguro que deseas eliminar este análisis? Esta acción no se puede deshacer.')) return
+        try {
+            const { error } = await supabase.from('winning_products').delete().eq('id', id)
+            if (error) throw error
+
+            setProducts(prev => {
+                const filtered = prev.filter(p => p.id !== id)
+                if (activeId === id) {
+                    setActiveId(filtered.length > 0 ? filtered[0].id : null)
+                }
+                return filtered
+            })
+            alert('Análisis eliminado correctamente.')
+        } catch (error: any) {
+            console.error('Error deleting:', error)
+            alert('Error al eliminar: ' + error.message)
         }
     }
 
@@ -186,6 +225,11 @@ export default function ProductAnalysisView() {
         const { links, notes, validationReason, ...bools } = c
         return Object.values(bools).filter(v => v === true).length
     }
+
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.dropiId.includes(searchTerm)
+    )
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -208,12 +252,28 @@ export default function ProductAnalysisView() {
 
                     {/* Sidebar List */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {products.length === 0 ? (
+                        <div style={{ position: 'relative' }}>
+                            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#bbb' }} />
+                            <input
+                                type="text"
+                                placeholder="Buscar producto..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                style={{
+                                    width: '100%', padding: '10px 12px 10px 36px', borderRadius: 12,
+                                    border: '1px solid #eee', fontSize: 13, outline: 'none',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={e => e.target.style.borderColor = '#4CAF50'}
+                                onBlur={e => e.target.style.borderColor = '#eee'}
+                            />
+                        </div>
+                        {filteredProducts.length === 0 ? (
                             <div style={{ padding: 24, background: '#f8f9fa', borderRadius: 12, textAlign: 'center', border: '1px dashed #ddd' }}>
-                                <p style={{ fontSize: 12, color: '#999' }}>No hay análisis creados.</p>
+                                <p style={{ fontSize: 12, color: '#999' }}>{searchTerm ? 'No se encontraron resultados.' : 'No hay análisis creados.'}</p>
                             </div>
                         ) : (
-                            products.map(p => (
+                            filteredProducts.map(p => (
                                 <div
                                     key={p.id}
                                     onClick={() => setActiveId(p.id)}
@@ -250,33 +310,33 @@ export default function ProductAnalysisView() {
                                     <Field label="Nombre del Producto">
                                         <input
                                             value={activeProduct.name}
-                                            onChange={e => updateProduct(activeProduct.id, { name: e.target.value })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { name: e.target.value })}
                                             className="input-field" placeholder="Foam Cleaner..."
                                         />
                                     </Field>
                                     <Field label="Precio Proveedor">
                                         <input
                                             type="number" value={activeProduct.supplierPrice}
-                                            onChange={e => updateProduct(activeProduct.id, { supplierPrice: Number(e.target.value) })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { supplierPrice: Number(e.target.value) })}
                                             className="input-field" placeholder="$0"
                                         />
                                     </Field>
                                     <Field label="ID o Enlace (Dropi/Enlace)">
                                         <input
                                             value={activeProduct.dropiId}
-                                            onChange={e => updateProduct(activeProduct.id, { dropiId: e.target.value })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { dropiId: e.target.value })}
                                             className="input-field" placeholder="45332"
                                         />
                                     </Field>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginTop: 16 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.5fr', gap: 20, marginTop: 16, alignItems: 'end' }}>
                                     <Field label="Link del anuncio (TikTok/FB)">
                                         <input
                                             value={activeProduct.adLinks[0]}
                                             onChange={e => {
                                                 const newLinks = [...activeProduct.adLinks]
                                                 newLinks[0] = e.target.value
-                                                updateProduct(activeProduct.id, { adLinks: newLinks })
+                                                updateProductLocal(activeProduct.id, { adLinks: newLinks })
                                             }}
                                             className="input-field" placeholder="https://..."
                                         />
@@ -284,18 +344,56 @@ export default function ProductAnalysisView() {
                                     <Field label="Precio de Venta">
                                         <input
                                             type="number" value={activeProduct.sellingPrice}
-                                            onChange={e => updateProduct(activeProduct.id, { sellingPrice: Number(e.target.value) })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { sellingPrice: Number(e.target.value) })}
                                             className="input-field" placeholder="$0"
                                         />
                                     </Field>
-                                    <Field label="Acciones">
+                                    <div style={{ display: 'flex', gap: 12 }}>
+                                        <button
+                                            onClick={handleManualSave}
+                                            disabled={isSaving}
+                                            style={{
+                                                flex: 2,
+                                                height: 44,
+                                                background: '#4CAF50',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: 12,
+                                                fontWeight: 800,
+                                                fontSize: 14,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 8,
+                                                cursor: 'pointer',
+                                                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)',
+                                                opacity: isSaving ? 0.7 : 1
+                                            }}
+                                        >
+                                            {isSaving ? <Activity size={18} className="animate-spin" /> : <Save size={18} />}
+                                            {saveStatus || 'Guardar Análisis'}
+                                        </button>
                                         <button
                                             onClick={() => deleteProduct(activeProduct.id)}
-                                            className="btn-secondary" style={{ width: '100%', color: '#e74c3c', border: '1px solid #ffeded' }}
+                                            style={{
+                                                flex: 1,
+                                                height: 44,
+                                                background: '#fff',
+                                                color: '#ef4444',
+                                                border: '1.5px solid #fee2e2',
+                                                borderRadius: 12,
+                                                fontWeight: 800,
+                                                fontSize: 13,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 8,
+                                                cursor: 'pointer'
+                                            }}
                                         >
-                                            <Trash2 size={16} /> Eliminar Análisis
+                                            <Trash2 size={16} /> Eliminar
                                         </button>
-                                    </Field>
+                                    </div>
                                 </div>
                             </div>
 
@@ -307,21 +405,21 @@ export default function ProductAnalysisView() {
                                     <Field label="Ángulo #1 Principal">
                                         <textarea
                                             value={activeProduct.angles.principal}
-                                            onChange={e => updateProduct(activeProduct.id, { angles: { ...activeProduct.angles, principal: e.target.value } })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { angles: { ...activeProduct.angles, principal: e.target.value } })}
                                             className="input-field" rows={3} style={{ resize: 'none' }}
                                         />
                                     </Field>
                                     <Field label="Ángulo #2 Secundario">
                                         <textarea
                                             value={activeProduct.angles.secondary}
-                                            onChange={e => updateProduct(activeProduct.id, { angles: { ...activeProduct.angles, secondary: e.target.value } })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { angles: { ...activeProduct.angles, secondary: e.target.value } })}
                                             className="input-field" rows={3} style={{ resize: 'none' }}
                                         />
                                     </Field>
                                     <Field label="Ángulo #3 Terciario">
                                         <textarea
                                             value={activeProduct.angles.tertiary}
-                                            onChange={e => updateProduct(activeProduct.id, { angles: { ...activeProduct.angles, tertiary: e.target.value } })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { angles: { ...activeProduct.angles, tertiary: e.target.value } })}
                                             className="input-field" rows={3} style={{ resize: 'none' }}
                                         />
                                     </Field>
@@ -332,22 +430,22 @@ export default function ProductAnalysisView() {
                                     <CheckItem
                                         label="¿No lo están vendiendo?"
                                         checked={activeProduct.competitor.notSellingInMarket}
-                                        onChange={v => updateProduct(activeProduct.id, { competitor: { ...activeProduct.competitor, notSellingInMarket: v } })}
+                                        onChange={v => updateProductLocal(activeProduct.id, { competitor: { ...activeProduct.competitor, notSellingInMarket: v } })}
                                     />
                                     <CheckItem
                                         label="¿Puedo competir en precio?"
                                         checked={activeProduct.competitor.canCompetePrice}
-                                        onChange={v => updateProduct(activeProduct.id, { competitor: { ...activeProduct.competitor, canCompetePrice: v } })}
+                                        onChange={v => updateProductLocal(activeProduct.id, { competitor: { ...activeProduct.competitor, canCompetePrice: v } })}
                                     />
                                     <CheckItem
                                         label="¿Creativo NO usado en mercado?"
                                         checked={activeProduct.competitor.creativeNotUsedInMarket}
-                                        onChange={v => updateProduct(activeProduct.id, { competitor: { ...activeProduct.competitor, creativeNotUsedInMarket: v } })}
+                                        onChange={v => updateProductLocal(activeProduct.id, { competitor: { ...activeProduct.competitor, creativeNotUsedInMarket: v } })}
                                     />
                                     <CheckItem
                                         label="¿Creativo NO usado en mi país?"
                                         checked={activeProduct.competitor.creativeNotUsedInMyMarket}
-                                        onChange={v => updateProduct(activeProduct.id, { competitor: { ...activeProduct.competitor, creativeNotUsedInMyMarket: v } })}
+                                        onChange={v => updateProductLocal(activeProduct.id, { competitor: { ...activeProduct.competitor, creativeNotUsedInMyMarket: v } })}
                                     />
                                     <div style={{ marginTop: 12 }}>
                                         <Field label="Enlaces de Competencia">
@@ -358,7 +456,7 @@ export default function ProductAnalysisView() {
                                     <Field label="Por qué está validado?">
                                         <textarea
                                             value={activeProduct.competitor.validationReason}
-                                            onChange={e => updateProduct(activeProduct.id, { competitor: { ...activeProduct.competitor, validationReason: e.target.value } })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { competitor: { ...activeProduct.competitor, validationReason: e.target.value } })}
                                             className="input-field" rows={4} style={{ resize: 'none', fontSize: 11 }}
                                         />
                                     </Field>
@@ -383,14 +481,14 @@ export default function ProductAnalysisView() {
                                                 key={i}
                                                 label={item.label}
                                                 checked={(activeProduct.technical as any)[item.key]}
-                                                onChange={v => updateProduct(activeProduct.id, { technical: { ...activeProduct.technical, [item.key]: v } })}
+                                                onChange={v => updateProductLocal(activeProduct.id, { technical: { ...activeProduct.technical, [item.key]: v } })}
                                             />
                                         ))}
                                     </div>
                                     <Field label="Notas Adicionales" style={{ marginTop: 12 }}>
                                         <textarea
                                             value={activeProduct.technical.additionalNotes}
-                                            onChange={e => updateProduct(activeProduct.id, { technical: { ...activeProduct.technical, additionalNotes: e.target.value } })}
+                                            onChange={e => updateProductLocal(activeProduct.id, { technical: { ...activeProduct.technical, additionalNotes: e.target.value } })}
                                             className="input-field" rows={3} style={{ resize: 'none', fontSize: 11 }}
                                         />
                                     </Field>

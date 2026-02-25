@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
 
     if (requestedModel === 'openai') {
       const apiKey = apiKeys?.openai || process.env.OPENAI_API_KEY
+      if (!apiKey) throw new Error('API Key de OpenAI no configurada')
       const openai = new OpenAI({ apiKey })
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -49,8 +50,9 @@ export async function POST(req: NextRequest) {
     }
     else if (requestedModel === 'gemini') {
       const apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY
-      const genAI = new GoogleGenerativeAI(apiKey!)
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+      if (!apiKey) throw new Error('API Key de Gemini no configurada')
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
       const result = await model.generateContent(prompt)
       const text = result.response.text().trim()
       const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
     }
     else if (requestedModel === 'grok') {
       const apiKey = apiKeys?.grok || process.env.GROK_API_KEY
+      if (!apiKey) throw new Error('API Key de Grok no configurada')
       const xai = new OpenAI({ apiKey, baseURL: "https://api.x.ai/v1" })
       const completion = await xai.chat.completions.create({
         model: "grok-2-latest",

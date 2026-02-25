@@ -17,9 +17,11 @@ import {
     Search,
     Target,
     Activity,
-    Truck
+    Truck,
+    LogOut
 } from 'lucide-react'
 import { supabase, type Analysis } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 interface UserStore {
     id: string
@@ -41,6 +43,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onViewChange }: Props) {
+    const router = useRouter()
     const [analyses, setAnalyses] = useState<Analysis[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -71,6 +74,14 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
         }
         fetchInitial()
     }, [])
+
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut()
+        if (!error) {
+            router.push('/login')
+            router.refresh()
+        }
+    }
 
     const handleAddStore = async () => {
         if (!newStoreName.trim()) return
@@ -180,10 +191,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
                 <div className="sidebar-logo-icon">
                     <Zap size={18} className="fill-white" />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span className="sidebar-logo-text">PIXORA</span>
-                    <span className="sidebar-logo-sub">BY PARGO ROJO</span>
-                </div>
+                <span className="sidebar-logo-text">PIXORA</span>
             </div>
 
             {/* Store Selector */}
@@ -373,7 +381,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
             </nav>
 
             {/* Bottom section */}
-            <div className="sidebar-bottom">
+            <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                     onClick={onNewAnalysis}
                     className="sidebar-bottom-btn"
@@ -381,6 +389,14 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
                 >
                     <Plus size={14} />
                     Analizar Nuevo
+                </button>
+                <button
+                    onClick={handleLogout}
+                    className="sidebar-bottom-btn"
+                    style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fee2e2' }}
+                >
+                    <LogOut size={14} />
+                    Cerrar Sesión
                 </button>
             </div>
         </aside>

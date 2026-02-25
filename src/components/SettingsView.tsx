@@ -9,6 +9,7 @@ import {
     TrendingUp, CreditCard, Receipt, Activity
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { COUNTRIES, Country } from '@/constants/countries'
 
 // Toggle switch component
 function Toggle({ active, onToggle }: { active: boolean, onToggle: () => void }) {
@@ -634,31 +635,42 @@ export default function SettingsView() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
                                 <div>
                                     <Label>País de Operación</Label>
-                                    <select value={regional.country} onChange={e => setRegional({ ...regional, country: e.target.value })} className="input-field">
-                                        <option value="ES">🇪🇸 España</option>
-                                        <option value="MX">🇲🇽 México</option>
-                                        <option value="CO">🇨🇴 Colombia</option>
-                                        <option value="AR">🇦🇷 Argentina</option>
-                                        <option value="CL">🇨🇱 Chile</option>
-                                        <option value="PE">🇵🇪 Perú</option>
-                                        <option value="US">🇺🇸 Estados Unidos</option>
-                                        <option value="BR">🇧🇷 Brasil</option>
-                                        <option value="FR">🇫🇷 Francia</option>
-                                        <option value="DE">🇩🇪 Alemania</option>
-                                        <option value="IT">🇮🇹 Italia</option>
-                                        <option value="UK">🇬🇧 Reino Unido</option>
+                                    <select
+                                        value={regional.country}
+                                        onChange={e => {
+                                            const countryCode = e.target.value;
+                                            const countryData = COUNTRIES.find(c => c.code === countryCode);
+                                            setRegional({
+                                                ...regional,
+                                                country: countryCode,
+                                                currency: countryData ? countryData.currency : regional.currency
+                                            });
+                                        }}
+                                        className="input-field"
+                                    >
+                                        <optgroup label="América">
+                                            {COUNTRIES.filter(c => c.region === 'America').map(c => (
+                                                <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                                            ))}
+                                        </optgroup>
+                                        <optgroup label="Europa">
+                                            {COUNTRIES.filter(c => c.region === 'Europe').map(c => (
+                                                <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                                            ))}
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
                                     <Label>Moneda</Label>
                                     <select value={regional.currency} onChange={e => setRegional({ ...regional, currency: e.target.value })} className="input-field">
-                                        <option value="EUR">€ Euro (EUR)</option>
-                                        <option value="USD">$ Dólar (USD)</option>
-                                        <option value="MXN">$ Peso MX (MXN)</option>
-                                        <option value="COP">$ Peso CO (COP)</option>
-                                        <option value="ARS">$ Peso AR (ARS)</option>
-                                        <option value="GBP">£ Libra (GBP)</option>
-                                        <option value="BRL">R$ Real (BRL)</option>
+                                        {Array.from(new Set(COUNTRIES.map(c => c.currency))).sort().map(curr => {
+                                            const country = COUNTRIES.find(c => c.currency === curr);
+                                            return (
+                                                <option key={curr} value={curr}>
+                                                    {curr} ({country?.symbol}) - {country?.currencyName}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
                                 <div>

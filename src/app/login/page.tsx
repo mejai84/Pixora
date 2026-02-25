@@ -3,7 +3,10 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, LogIn, Chrome, AlertCircle, Sparkles, UserPlus, Apple, User, Eye, EyeOff } from 'lucide-react'
+import {
+    Activity, Eye, EyeOff,
+    AlertCircle, Sparkles
+} from 'lucide-react'
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true)
@@ -32,7 +35,7 @@ export default function LoginPage() {
                     setError(error.message)
                     setLoading(false)
                 } else {
-                    router.push('/')
+                    router.push('/dashboard')
                     router.refresh()
                 }
             } else {
@@ -51,7 +54,7 @@ export default function LoginPage() {
                 } else if (data.user && data.session === null) {
                     setMessage('Revisa tu email para confirmar tu cuenta.')
                 } else {
-                    router.push('/')
+                    router.push('/dashboard')
                     router.refresh()
                 }
                 setLoading(false)
@@ -62,193 +65,134 @@ export default function LoginPage() {
         }
     }
 
-    const handleOAuth = async (provider: 'google' | 'azure' | 'apple') => {
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider,
-                options: {
-                    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
-                }
-            })
-            if (error) setError(error.message)
-        } catch (err) {
-            setError('Error al intentar iniciar sesión con ' + provider)
-        }
-    }
-
     return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#f0f0f7] relative overflow-hidden">
-            {/* Abstract Background Blobs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200/40 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
-            </div>
+        <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#f4f7fa] font-sans text-[#1e293b]">
+            <div className="w-full max-w-[440px] bg-white rounded-[48px] shadow-[0_30px_100px_rgba(0,0,0,0.08)] px-8 py-32 flex flex-col items-center">
 
-            <div className="w-full max-w-[460px] animate-fade-in shadow-2xl glass border border-white/20 rounded-2xl overflow-hidden flex flex-col">
-                <div className="mac-titlebar h-10 px-6">
-                    <div className="mac-traffic-lights">
-                        <div className="mac-dot red w-3 h-3"></div>
-                        <div className="mac-dot yellow w-3 h-3"></div>
-                        <div className="mac-dot green w-3 h-3"></div>
-                    </div>
-                    <div className="mac-window-title text-[11px]">Pixora — {isLogin ? 'Login' : 'Registro'}</div>
-                </div>
-
-                <div className="px-12 py-10 sm:px-14 sm:py-12 flex flex-col gap-8">
-                    <div className="flex flex-col items-center text-center gap-3">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
-                            <Sparkles size={24} color="white" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                            <h1 className="text-2xl font-bold tracking-tight gradient-text">
-                                {isLogin ? '¡Hola de nuevo!' : 'Crea tu cuenta'}
-                            </h1>
-                            <p className="text-[13px] text-muted">
-                                {isLogin
-                                    ? 'Ingresa tus credenciales para continuar'
-                                    : 'Comienza a analizar productos con IA'}
-                            </p>
+                {/* Visual Header */}
+                <div className="mb-12 flex flex-col items-center">
+                    <div className="mb-4">
+                        <div className="relative w-20 h-16 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[#4CAF50] blur-xl opacity-10 rounded-full scale-125"></div>
+                            <div className="relative z-10 text-[#4CAF50]">
+                                <Activity size={52} strokeWidth={2.5} />
+                            </div>
                         </div>
                     </div>
 
-                    <form onSubmit={handleAuth} className="flex flex-col gap-3.5">
-                        {!isLogin && (
-                            <div className="flex flex-col gap-1.5 animate-fade-in">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-muted/80 ml-1">Nombre Completo</label>
-                                <div className="relative group">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-purple-600 transition-colors z-10" />
-                                    <input
-                                        type="text"
-                                        placeholder="Tu nombre"
-                                        className="input-field h-11 bg-white/50"
-                                        style={{ paddingLeft: '44px' }}
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required={!isLogin}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted/80 ml-1">Email</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-purple-600 transition-colors z-10" />
-                                <input
-                                    type="email"
-                                    placeholder="name@example.com"
-                                    className="input-field h-11 bg-white/50"
-                                    style={{ paddingLeft: '44px' }}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-muted/80">Contraseña</label>
-                                {isLogin && (
-                                    <button type="button" className="text-[10px] font-medium text-purple-600 hover:text-purple-700 hover:underline">
-                                        ¿Olvidaste tu contraseña?
-                                    </button>
-                                )}
-                            </div>
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-purple-600 transition-colors z-10" />
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
-                                    className="input-field h-11 bg-white/50 w-full"
-                                    style={{ paddingLeft: '44px', paddingRight: '44px' }}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-purple-600 transition-colors z-10 p-1"
-                                >
-                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="p-3 rounded-xl bg-red-50/80 backdrop-blur-sm border border-red-100 flex items-start gap-3 text-red-600 animate-fade-in mt-2 shadow-sm">
-                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                <div className="text-xs font-medium leading-relaxed">{error}</div>
-                            </div>
-                        )}
-
-                        {message && (
-                            <div className="p-3 rounded-xl bg-green-50/80 backdrop-blur-sm border border-green-100 flex items-start gap-3 text-green-600 animate-fade-in mt-2 shadow-sm">
-                                <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                <div className="text-xs font-medium leading-relaxed">{message}</div>
-                            </div>
-                        )}
-
-                        <button
-                            disabled={loading}
-                            className="btn-primary w-full h-12 flex justify-center text-sm font-semibold mt-4 shadow-lg shadow-purple-500/10"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                                    {isLogin ? <LogIn className="w-4 h-4 ml-1" /> : <UserPlus className="w-4 h-4 ml-1" />}
-                                </>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="relative my-2">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-gray-100"></span>
-                        </div>
-                        <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-muted/40">
-                            <span className="bg-[#fcfcff] px-3">O continúa con</span>
-                        </div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                        <span className="text-[28px] font-[900] tracking-tight">Pix</span>
+                        <span className="text-[28px] font-[900] text-[#4CAF50] tracking-tight">ora</span>
+                        <span className="text-[10px] font-bold text-[#94a3b8] mt-1.5 ml-1">v2.0</span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                        <button
-                            type="button"
-                            className="btn-secondary h-11 justify-center text-xs font-semibold hover:bg-white/80 transition-all border-gray-100 shadow-sm"
-                            onClick={() => handleOAuth('google')}
-                        >
-                            <Chrome className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            className="btn-secondary h-11 justify-center text-xs font-semibold hover:bg-white/80 transition-all border-gray-100 shadow-sm"
-                            onClick={() => handleOAuth('azure')}
-                        >
-                            <Mail className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            className="btn-secondary h-11 justify-center text-xs font-semibold hover:bg-white/80 transition-all border-gray-100 shadow-sm"
-                            onClick={() => handleOAuth('apple')}
-                        >
-                            <Apple className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    <p className="text-center text-xs text-muted font-medium pt-2">
-                        {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-                        <button
-                            type="button"
-                            onClick={() => { setIsLogin(!isLogin); setError(null); setMessage(null); }}
-                            className="font-bold text-purple-600 hover:text-purple-700 hover:underline transition-all"
-                        >
-                            {isLogin ? 'Regístrate gratis' : 'Inicia sesión aquí'}
-                        </button>
+                    <p className="text-[#94a3b8] text-[13px] font-semibold text-center leading-relaxed max-w-[280px]">
+                        Pana mío, deja de perder plata y empieza a mejorar tu operación desde hoy
                     </p>
                 </div>
+
+                {/* Segmented Control - Fixed width for LogisKei look */}
+                <div className="w-full max-w-[340px] bg-[#f1f5f9] p-1 rounded-[20px] flex mb-8">
+                    <button
+                        onClick={() => setIsLogin(true)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        className={`flex-1 py-2.5 text-[13px] font-black rounded-[16px] transition-all duration-300 ${isLogin ? 'bg-white text-[#1e293b] shadow-sm' : 'text-[#94a3b8] hover:text-[#64748b]'}`}
+                    >
+                        Iniciar Sesión
+                    </button>
+                    <button
+                        onClick={() => setIsLogin(false)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        className={`flex-1 py-2.5 text-[13px] font-black rounded-[16px] transition-all duration-300 ${!isLogin ? 'bg-white text-[#1e293b] shadow-sm' : 'text-[#94a3b8] hover:text-[#64748b]'}`}
+                    >
+                        Crear Cuenta
+                    </button>
+                </div>
+
+                <form onSubmit={handleAuth} className="w-full max-w-[340px] flex flex-col gap-5">
+                    {!isLogin && (
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-[#64748b] ml-1">Nombre Completo</label>
+                            <input
+                                type="text"
+                                placeholder="Escribe tu nombre"
+                                className="w-full h-12 px-5 bg-white border border-[#e2e8f0] rounded-xl text-[14px] font-bold outline-none transition-all placeholder:text-[#cbd5e1] focus:border-[#4CAF50]"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required={!isLogin}
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-[#64748b] ml-1">Correo</label>
+                        <input
+                            type="email"
+                            placeholder="usuario@pixora.com"
+                            className="w-full h-12 px-5 bg-white border border-[#e2e8f0] rounded-xl text-[14px] font-[800] outline-none transition-all placeholder:text-[#cbd5e1] focus:border-[#4CAF50]"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-[#64748b] ml-1">Contraseña</label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="........"
+                                className="w-full h-12 px-5 bg-white border border-[#e2e8f0] rounded-xl text-[14px] font-[800] outline-none transition-all placeholder:text-[#cbd5e1] focus:border-[#4CAF50]"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#cbd5e1] hover:text-[#4CAF50]"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-3 rounded-xl bg-red-50 border border-red-100 flex items-center gap-2 text-red-600">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <div className="text-[11px] font-bold">{error}</div>
+                        </div>
+                    )}
+
+                    {message && (
+                        <div className="p-3 rounded-xl bg-green-50 border border-green-100 flex items-center gap-2 text-[#4CAF50]">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <div className="text-[11px] font-bold">{message}</div>
+                        </div>
+                    )}
+
+                    <button
+                        disabled={loading}
+                        className="w-full h-[50px] mt-2 bg-[#4CAF50] text-white rounded-[16px] font-black text-[15px] shadow-[0_8px_20px_rgba(76,175,80,0.25)] hover:shadow-[0_12px_24px_rgba(76,175,80,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                    >
+                        {loading ? (
+                            <div className="w-5 h-5 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <span className="tracking-wide">{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>
+                        )}
+                    </button>
+                </form>
+
+                {isLogin && (
+                    <button type="button" className="mt-6 text-[11px] font-bold text-[#94a3b8] hover:text-[#4CAF50] transition-colors uppercase tracking-widest">
+                        ¿Olvidaste tu contraseña?
+                    </button>
+                )}
+            </div>
+
+            {/* Copyright Style from Reference */}
+            <div className="absolute bottom-10 left-0 right-0 text-center pointer-events-none opacity-20 capitalize">
+                <p className="text-[11px] font-black tracking-[0.2em] text-[#1e293b]">© 2026 Pixora operating software</p>
             </div>
         </div>
     )

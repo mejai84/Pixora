@@ -2,8 +2,25 @@
 
 import React, { useState, useEffect } from 'react'
 import { Calculator, TrendingUp, RefreshCcw, Info, CheckCircle2, Package, BarChart3, AlertTriangle, ArrowRight, DollarSign } from 'lucide-react'
+import { COUNTRIES } from '@/constants/countries'
 
 export default function QuickCalculatorView() {
+    // Regional state
+    const [regional, setRegional] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('pixora_regional')
+            return saved ? JSON.parse(saved) : {
+                country: 'CO',
+                currency: 'COP',
+                language: 'es',
+                taxRate: '0',
+            }
+        }
+        return { country: 'CO', currency: 'COP', language: 'es', taxRate: '0' }
+    })
+
+    const activeCountry = COUNTRIES.find(c => c.code === regional.country) || COUNTRIES.find(c => c.code === 'CO') || COUNTRIES[0]
+
     // Inputs (Matching B-column sequence)
     const [providerPrice, setProviderPrice] = useState<number>(0) // B6
     const [baseFreight, setBaseFreight] = useState<number>(0)    // B7
@@ -57,9 +74,9 @@ export default function QuickCalculatorView() {
     }, [providerPrice, baseFreight, deliveryRate, adminCosts, fulfillment, cpaAds, targetProfitPercent])
 
     const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('es-CO', {
+        return new Intl.NumberFormat(activeCountry.code === 'ES' ? 'es-ES' : 'es-CO', {
             style: 'currency',
-            currency: 'COP',
+            currency: activeCountry.currency,
             maximumFractionDigits: 0
         }).format(Math.round(val || 0))
     }

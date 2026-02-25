@@ -8,11 +8,25 @@ export async function POST(req: NextRequest) {
         if (!url) return NextResponse.json({ error: 'URL requerida' }, { status: 400 })
 
         // Extraer contenido de la URL via Jina AI Reader
+        console.log('Analizando URL:', url)
         const jinaUrl = `https://r.jina.ai/${url}`
         const jinaRes = await fetch(jinaUrl, { headers: { 'Accept': 'text/plain' } })
+
+        if (!jinaRes.ok) {
+            console.error('Error de Jina AI:', jinaRes.status, jinaRes.statusText)
+            return NextResponse.json({ error: `No se pudo acceder al contenido de la web (${jinaRes.status})` }, { status: 502 })
+        }
+
         const pageContent = await jinaRes.text()
+        console.log('Contenido extraído, longitud:', pageContent.length)
+
+        if (!pageContent.trim()) {
+            return NextResponse.json({ error: 'La página parece estar vacía o bloqueada por un bot' }, { status: 502 })
+        }
+
         const truncatedContent = pageContent.slice(0, 10000)
 
+        // ... (rest of the prompt construction) ...
         const prompt = `Actúa como un analista de productos experto en eCommerce. Analiza el siguiente contenido de una página web y extrae información extremadamente detallada para usarla en campañas de marketing.
         
         Sigue exactamente este esquema y profundiza en cada punto:
@@ -52,6 +66,8 @@ export async function POST(req: NextRequest) {
 
         if (requestedModel === 'openai') {
             const apiKey = apiKeys?.openai || process.env.OPENAI_API_KEY
+            if (!apiKey) throw new Error('API Key de OpenAI no configurada')
+
             const openai = new OpenAI({ apiKey })
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
@@ -62,8 +78,10 @@ export async function POST(req: NextRequest) {
         }
         else if (requestedModel === 'gemini') {
             const apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY
-            const genAI = new GoogleGenerativeAI(apiKey!)
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+            if (!apiKey) throw new Error('API Key de Gemini no configurada')
+
+            const genAI = new GoogleGenerativeAI(apiKey)
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }) // Cambiado a gemini-1.5-flash que es más estable
             const result = await model.generateContent(prompt)
             const text = result.response.text().trim()
             const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -71,6 +89,8 @@ export async function POST(req: NextRequest) {
         }
         else if (requestedModel === 'grok') {
             const apiKey = apiKeys?.grok || process.env.GROK_API_KEY
+            if (!apiKey) throw new Error('API Key de Grok no configurada')
+
             const xai = new OpenAI({ apiKey, baseURL: "https://api.x.ai/v1" })
             const completion = await xai.chat.completions.create({
                 model: "grok-2-latest",
@@ -82,7 +102,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ productInfo })
     } catch (error: any) {
-        console.error('Error en /api/analyze:', error)
-        return NextResponse.json({ error: error.message || 'Error al analizar' }, { status: 500 })
+        console.error('CRITICAL ERROR en /api/analyze:', error)
+        return NextResponse.json({ error: error.message || 'Error interno del servidor al analizar' }, { status: 500 })
     }
 }

@@ -2,7 +2,7 @@
 
 import { AlertCircle, Check, Copy, ExternalLink, FileText, Plus, Target, User, Users, Zap } from 'lucide-react'
 import { useState } from 'react'
-import type { WizardData } from '@/app/page'
+import type { WizardData } from '@/app/dashboard/page'
 
 interface Props {
     data: WizardData
@@ -119,9 +119,9 @@ export default function ResultPanel({ data, onNewAnalysis }: Props) {
                 {/* Problemas */}
                 {data.copy?.problems && data.copy.problems.length > 0 && (
                     <Section icon={<AlertCircle size={16} />} title="Problemas que resuelve" color="#ef4444"
-                        copyText={data.copy.problems.map((p, i) => `${i + 1}. ${p}`).join('\n')}>
+                        copyText={(data.copy?.problems || []).map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')}>
                         <ul className="space-y-2">
-                            {data.copy.problems.map((p, i) => (
+                            {(data.copy?.problems || []).map((p: string, i: number) => (
                                 <li key={i} className="flex items-start gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
                                     <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style={{ background: 'rgba(239,68,68,0.2)', color: '#ef4444' }}>
                                         {i + 1}
@@ -144,7 +144,7 @@ export default function ResultPanel({ data, onNewAnalysis }: Props) {
                             <div className="mt-4">
                                 <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>💡 CONSEJOS</p>
                                 <ul className="space-y-1">
-                                    {data.tips.map((tip, i) => (
+                                    {(data.tips || []).map((tip: string, i: number) => (
                                         <li key={i} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
                                             <span style={{ color: 'var(--accent-light)' }}>›</span>{tip}
                                         </li>

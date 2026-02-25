@@ -103,11 +103,50 @@ export default function OperationsView() {
             <div style={{ padding: '24px' }}>
 
                 {/* Header */}
-                <div style={{ marginBottom: 32 }}>
-                    <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Activity className="text-[#9b59b6]" size={30} /> Análisis de Operación
-                    </h1>
-                    <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Visión estratégica de tu negocio: Ventas, testing y retrospección.</p>
+                <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <Activity className="text-[#9b59b6]" size={30} /> Análisis de Operación
+                        </h1>
+                        <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Visión estratégica de tu negocio: Ventas, testing y retrospección.</p>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            if (!confirm('¿Seguro que quieres borrar todos los datos del análisis actual?')) return
+                            const { data: { user } } = await supabase.auth.getUser()
+                            if (!user) return
+                            const emptyStats = {
+                                total_invoiced: 0,
+                                sales_count: 0,
+                                investment_testing: 0,
+                                profits: 0,
+                                testeos_tiktok: 0,
+                                testeos_meta: 0,
+                                category_shares: [],
+                                questions: [],
+                                found_products: { platforms: [''], activeAds: [''], adLibraries: [''] },
+                                retrospective: ''
+                            }
+                            if (statsId.current) {
+                                await supabase.from('operation_stats').update(emptyStats).eq('id', statsId.current)
+                            }
+                            setStats({
+                                totalInvoiced: 0,
+                                salesCount: 0,
+                                investmentTesting: 0,
+                                profits: 0,
+                                testeosTikTok: 0,
+                                testeosMeta: 0
+                            })
+                            setQuestions(questions.map(q => ({ ...q, answer: null })))
+                            setFoundProducts({ platforms: [''], activeAds: [''], adLibraries: [''] })
+                            setRetrospective('')
+                            alert('Análisis limpiado')
+                        }}
+                        style={{ background: 'white', border: '1px solid #ffeaea', color: '#e74c3c', padding: '8px 16px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                        <Trash2 size={14} /> Borrar Análisis
+                    </button>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 32 }}>
