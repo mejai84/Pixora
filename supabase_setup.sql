@@ -54,11 +54,30 @@ CREATE TABLE IF NOT EXISTS api_settings (
   CONSTRAINT single_row CHECK (id = 1)
 );
 
--- 4. Habilitar Row Level Security (sin autenticación por ahora, acceso público)
-ALTER TABLE analyses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE api_settings ENABLE ROW LEVEL SECURITY;
+-- 1. Actualizar tabla de análisis para soportar multi-usuario
+ALTER TABLE analyses ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
 
-CREATE POLICY "Allow all on analyses" ON analyses FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on templates" ON templates FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on api_settings" ON api_settings FOR ALL USING (true) WITH CHECK (true);
+-- 2. Corregir RLS para 'analyses' (Solo el dueño puede ver/editar)
+DROP POLICY IF EXISTS "Allow all on analyses" ON analyses;
+CREATE POLICY "Los usuarios solo ven sus propios análisis" ON analyses FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo insertan sus propios análisis" ON analyses FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo actualizan sus propios análisis" ON analyses FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo eliminan sus propios análisis" ON analyses FOR DELETE USING (auth.uid() = user_id);
+
+-- 3. Tabla para configuraciones de API por usuario (ya creada en otro paso pero aquí para referencia)
+CREATE TABLE IF NOT EXISTS user_api_configs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  name TEXT NOT NULL,
+  chatgpt TEXT,
+  gemini TEXT,
+  grok TEXT,
+  active BOOLEAN DEFAULT false
+);
+
+ALTER TABLE user_api_configs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Los usuarios solo ven sus propias configuraciones" ON user_api_configs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo insertan sus propias configuraciones" ON user_api_configs FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo actualizan sus propias configuraciones" ON user_api_configs FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Los usuarios solo eliminan sus propias configuraciones" ON user_api_configs FOR DELETE USING (auth.uid() = user_id);
