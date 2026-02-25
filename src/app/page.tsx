@@ -38,6 +38,7 @@ import ProductAnalysisView from '@/components/ProductAnalysisView'
 import CampaignsView from '@/components/CampaignsView'
 import OperationsView from '@/components/OperationsView'
 import LogisticsView from '@/components/LogisticsView'
+import QuickCalculatorView from '@/components/QuickCalculatorView'
 
 export interface WizardData {
   url: string
@@ -395,6 +396,7 @@ export default function HomePage() {
       case 'banners': return 'BANNER STUDIO'
       case 'landings': return 'LANDING FACTORY'
       case 'simulator': return 'CONTROL DIARIO'
+      case 'quick_calc': return 'CALCULADORA EXPRESS'
       case 'settings': return 'AJUSTES DE CUENTA'
       default: return 'PIXORA'
     }
@@ -548,6 +550,8 @@ export default function HomePage() {
             <SettingsView />
           ) : activeView === 'simulator' ? (
             <ProfitCalcView />
+          ) : activeView === 'quick_calc' ? (
+            <QuickCalculatorView />
           ) : activeView === 'product_analysis' ? (
             <ProductAnalysisView />
           ) : activeView === 'campaigns' ? (

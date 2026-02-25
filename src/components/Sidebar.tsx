@@ -165,6 +165,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
         { id: 'product_analysis', label: 'Análisis Producto', icon: Search },
         { id: 'campaigns', label: 'Campañas', icon: Target },
         { id: 'simulator', label: 'Control Diario', icon: Calculator },
+        { id: 'quick_calc', label: 'Calculadora Express', icon: Zap },
         { id: 'operations', label: 'Operaciones', icon: Activity },
         { id: 'logistics', label: 'Logística', icon: Truck },
         { id: 'banners', label: 'Banner Studio', icon: ImageIcon },
