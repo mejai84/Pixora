@@ -271,17 +271,35 @@ export default function ProfitCalcView() {
                     country
                 }
             })
-            const { data: inserted } = await supabase.from('profit_records').insert(imports).select()
+            if (imports.length === 0) {
+                alert('No se encontraron datos válidos en el archivo. Revisa que las columnas tengan nombres correctos (Fecha, Producto, Ventas, etc.)')
+                return
+            }
+
+            const { data: inserted, error } = await supabase.from('profit_records').insert(imports).select()
+
+            if (error) throw error
+
             if (inserted) {
                 const formatted = inserted.map((r: any) => ({
-                    id: r.id, date: r.date, type: r.type, productName: r.product_name,
-                    cancelRate: r.cancel_rate, returnRate: r.return_rate, productCost: r.product_cost,
-                    baseShipping: r.base_shipping, returnShipping: r.return_shipping,
-                    adminCosts: r.admin_costs, shopifySales: r.shopify_sales,
-                    adSpend: r.ad_spend, tiktokSpend: 0, otherSpend: 0, sellingPrice: r.selling_price
+                    id: r.id,
+                    date: r.date,
+                    type: r.type,
+                    productName: r.product_name,
+                    cancelRate: r.cancel_rate,
+                    returnRate: r.return_rate,
+                    productCost: r.product_cost,
+                    baseShipping: r.base_shipping,
+                    returnShipping: r.return_shipping,
+                    adminCosts: r.admin_costs,
+                    shopifySales: r.shopify_sales,
+                    adSpend: r.ad_spend,
+                    tiktokSpend: r.tiktok_spend || 0,
+                    otherSpend: r.other_spend || 0,
+                    sellingPrice: r.selling_price
                 }))
-                setRecords([...formatted, ...records])
-                alert(`¡${inserted.length} registros importados!`)
+                setRecords(prev => [...formatted, ...prev])
+                alert(`¡${inserted.length} registros importados con éxito!`)
             }
         } catch (error) {
             alert('Error al importar')

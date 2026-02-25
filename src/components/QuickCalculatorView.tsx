@@ -107,7 +107,7 @@ export default function QuickCalculatorView() {
                                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Precio Proveedor</label>
                                         <div title="Ingresa el costo neto que pagas a tu proveedor por el producto. Sirve para conocer tu punto de partida antes de gastos operativos." style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                     </div>
-                                    <input type="number" value={providerPrice || ''} onChange={(e) => setProviderPrice(Number(e.target.value))} className="input-field shadow-sm" style={{ fontSize: '15px' }} />
+                                    <input type="number" value={providerPrice === 0 ? '' : providerPrice} onChange={(e) => setProviderPrice(Number(e.target.value))} className="input-field shadow-sm" style={{ fontSize: '15px' }} />
                                 </div>
 
                                 <div className="input-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -116,14 +116,14 @@ export default function QuickCalculatorView() {
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Flete Base</label>
                                             <div title="Ingresa el valor acordado con la transportadora por un envío. Es la base para proyectar el costo total de logística." style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                         </div>
-                                        <input type="number" value={baseFreight || ''} onChange={(e) => setBaseFreight(Number(e.target.value))} className="input-field shadow-sm" />
+                                        <input type="number" value={baseFreight === 0 ? '' : baseFreight} onChange={(e) => setBaseFreight(Number(e.target.value))} className="input-field shadow-sm" />
                                     </div>
                                     <div className="input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#2ecc71', textTransform: 'uppercase' }}>% Entrega</label>
                                             <div title="Este es el % de efectividad sin incluir cancelados y rechazados, ósea solo tomando en cuenta lo que despachamos ya que solo estos pedidos pagan flete" style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                         </div>
-                                        <input type="number" value={deliveryRate || ''} onChange={(e) => setDeliveryRate(Number(e.target.value))} className="input-field shadow-sm" style={{ borderColor: 'rgba(46, 204, 113, 0.2)' }} />
+                                        <input type="number" value={deliveryRate === 0 ? '' : deliveryRate} onChange={(e) => setDeliveryRate(Number(e.target.value))} className="input-field shadow-sm" style={{ borderColor: 'rgba(46, 204, 113, 0.2)' }} />
                                     </div>
                                 </div>
 
@@ -132,7 +132,7 @@ export default function QuickCalculatorView() {
                                         <label style={{ fontSize: '10px', fontWeight: 800, color: '#0084ff', textTransform: 'uppercase' }}>CPA Ads Manager</label>
                                         <div title="Ingresa el costo por compra que te muestra Facebook o TikTok. Se usará para calcular tu CPA Costeado Real (que siempre es mayor)." style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                     </div>
-                                    <input type="number" value={cpaAds || ''} onChange={(e) => setCpaAds(Number(e.target.value))} className="input-field shadow-sm" style={{ borderColor: 'rgba(0, 132, 255, 0.2)' }} />
+                                    <input type="number" value={cpaAds === 0 ? '' : cpaAds} onChange={(e) => setCpaAds(Number(e.target.value))} className="input-field shadow-sm" style={{ borderColor: 'rgba(0, 132, 255, 0.2)' }} />
                                 </div>
 
                                 <div className="input-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -141,14 +141,14 @@ export default function QuickCalculatorView() {
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Administrativos</label>
                                             <div title="Ingresa gastos de personal, herramientas o servicios divididos por venta estimada. Ayuda a llegar a una utilidad neta real, no bruta." style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                         </div>
-                                        <input type="number" value={adminCosts || ''} onChange={(e) => setAdminCosts(Number(e.target.value))} className="input-field shadow-sm" />
+                                        <input type="number" value={adminCosts === 0 ? '' : adminCosts} onChange={(e) => setAdminCosts(Number(e.target.value))} className="input-field shadow-sm" />
                                     </div>
                                     <div className="input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Fullfillment</label>
                                             <div title="Ingresa el costo de bolsas, cinta, etiquetas y el pago por preparar el paquete. Es vital para no perder dinero en la operación." style={{ cursor: 'help', color: '#ccc' }}><Info size={12} /></div>
                                         </div>
-                                        <input type="number" value={fulfillment || ''} onChange={(e) => setFulfillment(Number(e.target.value))} className="input-field shadow-sm" />
+                                        <input type="number" value={fulfillment === 0 ? '' : fulfillment} onChange={(e) => setFulfillment(Number(e.target.value))} className="input-field shadow-sm" />
                                     </div>
                                 </div>
 

@@ -278,8 +278,8 @@ export default function CampaignsView() {
                                             <td style={{ ...tdStyle, background: '#fcfdff' }}><input type="date" value={r.fbDate} onChange={e => updateRow(r.id, { fbDate: e.target.value })} style={inputTableStyle} /></td>
                                             <td style={tdStyle}><input value={r.supplier} onChange={e => updateRow(r.id, { supplier: e.target.value })} style={inputTableStyle} /></td>
                                             <td style={tdStyle}><input value={r.platformCode} onChange={e => updateRow(r.id, { platformCode: e.target.value })} style={inputTableStyle} /></td>
-                                            <td style={tdStyle}><input type="number" value={r.supplierCost} onChange={e => updateRow(r.id, { supplierCost: Number(e.target.value) })} style={inputTableStyle} /></td>
-                                            <td style={tdStyle}><input type="number" value={r.sellingPrice} onChange={e => updateRow(r.id, { sellingPrice: Number(e.target.value) })} style={inputTableStyle} /></td>
+                                            <td style={tdStyle}><input type="number" value={r.supplierCost === 0 ? '' : r.supplierCost} onChange={e => updateRow(r.id, { supplierCost: Number(e.target.value) })} style={inputTableStyle} /></td>
+                                            <td style={tdStyle}><input type="number" value={r.sellingPrice === 0 ? '' : r.sellingPrice} onChange={e => updateRow(r.id, { sellingPrice: Number(e.target.value) })} style={inputTableStyle} /></td>
                                             <td style={tdStyle}>
                                                 <span style={{ fontSize: 13, fontWeight: 800, color: '#e74c3c' }}>
                                                     ${calculateBreakeven(r.supplierCost, r.sellingPrice).toLocaleString()}
