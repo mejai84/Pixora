@@ -50,9 +50,14 @@ export default function LoginPage() {
                     },
                 })
                 if (error) {
-                    setError(error.message)
+                    if (error.message.includes('already registered')) {
+                        setError('Este correo ya está registrado. Por favor, inicia sesión.')
+                        setIsLogin(true) // Switch to login tab
+                    } else {
+                        setError(error.message)
+                    }
                 } else if (data.user && data.session === null) {
-                    setMessage('Revisa tu email para confirmar tu cuenta.')
+                    setMessage('Cuenta creada. Revisa tu email para confirmar y poder entrar.')
                 } else {
                     router.push('/dashboard')
                     router.refresh()
@@ -60,7 +65,7 @@ export default function LoginPage() {
                 setLoading(false)
             }
         } catch (err) {
-            setError('Ocurrió un error inesperado')
+            setError('Ocurrió un error inesperado al conectar con el servidor.')
             setLoading(false)
         }
     }
