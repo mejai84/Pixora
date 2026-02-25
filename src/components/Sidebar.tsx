@@ -18,7 +18,8 @@ import {
     Target,
     Activity,
     Truck,
-    LogOut
+    LogOut,
+    TrendingUp
 } from 'lucide-react'
 import { supabase, type Analysis } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -175,6 +176,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
         { id: 'analyzer', label: 'Panel Central', icon: Home },
         { id: 'product_analysis', label: 'Análisis Producto', icon: Search },
         { id: 'campaigns', label: 'Campañas', icon: Target },
+        { id: 'marketing', label: 'Pauta / Marketing', icon: TrendingUp },
         { id: 'simulator', label: 'Control Diario', icon: Calculator },
         { id: 'quick_calc', label: 'Calculadora Express', icon: Zap },
         { id: 'operations', label: 'Operaciones', icon: Activity },

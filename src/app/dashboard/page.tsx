@@ -40,6 +40,7 @@ import OperationsView from '@/components/OperationsView'
 import LogisticsView from '@/components/LogisticsView'
 import QuickCalculatorView from '@/components/QuickCalculatorView'
 import DashboardView from '@/components/DashboardView'
+import MarketingView from '@/components/MarketingView'
 
 export interface WizardData {
   url: string
@@ -397,6 +398,7 @@ export default function HomePage() {
       case 'campaigns': return 'SEGUIMIENTO DE CAMPAÑAS'
       case 'operations': return 'ANÁLISIS DE OPERACIÓN'
       case 'logistics': return 'AUDITOR LOGÍSTICO'
+      case 'marketing': return 'PAUTA & MARKETING'
       case 'banners': return 'BANNER STUDIO'
       case 'landings': return 'LANDING FACTORY'
       case 'simulator': return 'CONTROL DIARIO'
@@ -560,6 +562,8 @@ export default function HomePage() {
             <OperationsView />
           ) : activeView === 'logistics' ? (
             <LogisticsView />
+          ) : activeView === 'marketing' ? (
+            <MarketingView />
           ) : (activeView === 'banners' || activeView === 'landings') && viewMode === 'grid' ? (
             <div className="main-scroll custom-scrollbar">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>

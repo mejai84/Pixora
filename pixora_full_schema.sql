@@ -150,15 +150,24 @@ CREATE TABLE IF NOT EXISTS user_products (
     url TEXT
 );
 
--- 10. USER STORES (Sidebar Selector)
-CREATE TABLE IF NOT EXISTS user_stores (
+-- 11. MARKETING SPEND (Ad Tracking)
+CREATE TABLE IF NOT EXISTS marketing_spend (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    name TEXT NOT NULL,
-    url TEXT,
-    platform TEXT DEFAULT 'shopify',
-    is_active BOOLEAN DEFAULT false
+    date TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    campaign_name TEXT,
+    ad_account TEXT,
+    spend FLOAT DEFAULT 0,
+    impressions INTEGER DEFAULT 0,
+    clicks INTEGER DEFAULT 0,
+    conversions INTEGER DEFAULT 0,
+    ctr FLOAT DEFAULT 0,
+    cpc FLOAT DEFAULT 0,
+    cpa FLOAT DEFAULT 0,
+    creative_url TEXT,
+    status TEXT DEFAULT 'active' -- active, paused, warning
 );
 
 -- ENABLE ROW LEVEL SECURITY (RLS)
@@ -172,6 +181,7 @@ ALTER TABLE winning_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_stores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE marketing_spend ENABLE ROW LEVEL SECURITY;
 
 -- CREATE POLICIES
 DO $$ 
@@ -205,5 +215,8 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'RLS_User_Stores') THEN
         CREATE POLICY "RLS_User_Stores" ON user_stores FOR ALL USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'RLS_Marketing_Spend') THEN
+        CREATE POLICY "RLS_Marketing_Spend" ON marketing_spend FOR ALL USING (auth.uid() = user_id);
     END IF;
 END $$;
