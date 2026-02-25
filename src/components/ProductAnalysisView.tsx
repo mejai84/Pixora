@@ -226,6 +226,27 @@ export default function ProductAnalysisView() {
         return Object.values(bools).filter(v => v === true).length
     }
 
+    const getScoreColors = (score: number, isActive: boolean) => {
+        if (score >= 8) return {
+            bg: isActive ? '#f0faf0' : 'white',
+            border: isActive ? '#4CAF50' : '#eee',
+            text: isActive ? '#4CAF50' : '#333',
+            badge: '#4CAF50'
+        }
+        if (score >= 4) return {
+            bg: isActive ? '#fffbeb' : 'white',
+            border: isActive ? '#f59e0b' : '#eee',
+            text: isActive ? '#f59e0b' : '#333',
+            badge: '#f59e0b'
+        }
+        return {
+            bg: isActive ? '#fef2f2' : 'white',
+            border: isActive ? '#ef4444' : '#eee',
+            text: isActive ? '#ef4444' : '#333',
+            badge: '#ef4444'
+        }
+    }
+
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.dropiId.includes(searchTerm)
@@ -273,30 +294,34 @@ export default function ProductAnalysisView() {
                                 <p style={{ fontSize: 12, color: '#999' }}>{searchTerm ? 'No se encontraron resultados.' : 'No hay análisis creados.'}</p>
                             </div>
                         ) : (
-                            filteredProducts.map(p => (
-                                <div
-                                    key={p.id}
-                                    onClick={() => setActiveId(p.id)}
-                                    style={{
-                                        padding: '16px', borderRadius: 12, cursor: 'pointer',
-                                        background: activeId === p.id ? '#f0faf0' : 'white',
-                                        border: `1px solid ${activeId === p.id ? '#4CAF50' : '#eee'}`,
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <h3 style={{ fontSize: 14, fontWeight: 700, color: activeId === p.id ? '#4CAF50' : '#333' }}>{p.name || 'Sin nombre'}</h3>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                                        <span style={{ fontSize: 10, color: '#999' }}>ID: {p.dropiId || '---'}</span>
-                                        <div style={{
-                                            background: activeId === p.id ? '#4CAF50' : '#eee',
-                                            color: 'white', fontSize: 9, fontWeight: 800,
-                                            padding: '2px 6px', borderRadius: 4
-                                        }}>
-                                            {calculateTechnicalScore(p.technical)}/10 pts
+                            filteredProducts.map(p => {
+                                const score = calculateTechnicalScore(p.technical);
+                                const colors = getScoreColors(score, activeId === p.id);
+                                return (
+                                    <div
+                                        key={p.id}
+                                        onClick={() => setActiveId(p.id)}
+                                        style={{
+                                            padding: '16px', borderRadius: 12, cursor: 'pointer',
+                                            background: colors.bg,
+                                            border: `1px solid ${colors.border}`,
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <h3 style={{ fontSize: 14, fontWeight: 700, color: colors.text }}>{p.name || 'Sin nombre'}</h3>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                                            <span style={{ fontSize: 10, color: '#999' }}>ID: {p.dropiId || '---'}</span>
+                                            <div style={{
+                                                background: colors.badge,
+                                                color: 'white', fontSize: 9, fontWeight: 800,
+                                                padding: '2px 6px', borderRadius: 4
+                                            }}>
+                                                {score}/10 pts
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
 

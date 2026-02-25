@@ -82,7 +82,7 @@ export default function QuickCalculatorView() {
     }
 
     return (
-        <div className="main-scroll custom-scrollbar" style={{ padding: '40px', background: '#fcfcfd', minHeight: '100%' }}>
+        <div className="main-scroll custom-scrollbar calc-padding" style={{ padding: '40px', background: '#fcfcfd', minHeight: '100%' }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                 <div style={{ marginBottom: '40px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00c2ff', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase', marginBottom: '8px' }}>
@@ -94,7 +94,7 @@ export default function QuickCalculatorView() {
                     <p style={{ color: '#666', fontSize: '15px', marginTop: '8px' }}>Calcula tu punto de equilibrio y rentabilidad neta proyectada considerando la efectividad real de tu operación.</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px', alignItems: 'start' }}>
+                <div className="calc-grid-main" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '32px', alignItems: 'start' }}>
 
                     {/* COLUMNA DE ENTRADAS (B) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -173,11 +173,11 @@ export default function QuickCalculatorView() {
 
                         {/* PANEL DE RESULTADOS PRINCIPAL */}
                         <div className="card shadow-hover" style={{ padding: '0', borderRadius: '32px', background: 'white', border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                            <div style={{ padding: '40px', borderBottom: '1px solid #f0f0f0' }}>
+                            <div className="calc-results-main" style={{ padding: '40px', borderBottom: '1px solid #f0f0f0' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                                     <div>
                                         <div style={{ fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Vende este producto a</div>
-                                        <div style={{ fontSize: '52px', fontWeight: 900, color: '#1a1a1a', letterSpacing: '-0.04em' }}>
+                                        <div className="calc-results-value" style={{ fontSize: '52px', fontWeight: 900, color: '#1a1a1a', letterSpacing: '-0.04em' }}>
                                             {formatCurrency(suggestedPrice)}
                                         </div>
                                     </div>
@@ -190,7 +190,7 @@ export default function QuickCalculatorView() {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                                <div className="calc-results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                                     <div style={{ padding: '16px', borderRadius: '16px', background: '#fff9f0', border: '1px solid #fee6c4' }}>
                                         <div style={{ fontSize: '9px', fontWeight: 800, color: '#d97706', textTransform: 'uppercase', marginBottom: '8px' }}>Flete c/ Dev.</div>
                                         <div style={{ fontSize: '18px', fontWeight: 800, color: '#1a1a1a' }}>{formatCurrency(freightWithReturns)}</div>
@@ -206,7 +206,7 @@ export default function QuickCalculatorView() {
                                 </div>
                             </div>
 
-                            <div style={{ background: '#f8fafc', padding: '32px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div className="calc-footer" style={{ background: '#f8fafc', padding: '32px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Costos Totales</div>
                                     <div style={{ fontSize: '24px', fontWeight: 900, color: '#1a1a1a' }}>{formatCurrency(totalCosts)}</div>
@@ -219,7 +219,7 @@ export default function QuickCalculatorView() {
                         </div>
 
                         {/* MENSAJES DE ESTRATEGIA */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="calc-strategy-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div className="card shadow-hover" style={{ padding: '24px', borderRadius: '24px', background: '#fff1f2', border: '1px solid #ffe4e6' }}>
                                 <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                                     <div style={{ background: '#f43f5e', padding: '8px', borderRadius: '10px' }}>
@@ -274,6 +274,22 @@ export default function QuickCalculatorView() {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                @media (max-width: 1024px) {
+                    .calc-grid-main { grid-template-columns: 1fr !important; }
+                    .calc-results-grid { grid-template-columns: 1fr 1fr !important; }
+                    .calc-strategy-grid { grid-template-columns: 1fr !important; }
+                }
+                @media (max-width: 768px) {
+                    .calc-padding { padding: 20px !important; }
+                    .calc-results-main { padding: 24px !important; }
+                    .calc-results-main h1 { font-size: 28px !important; }
+                    .calc-results-value { font-size: 38px !important; }
+                    .calc-results-grid { grid-template-columns: 1fr !important; }
+                    .calc-footer { padding: 24px !important; flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+                }
+            `}</style>
         </div>
     )
 }

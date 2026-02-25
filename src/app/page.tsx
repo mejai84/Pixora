@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import {
   Zap, Activity, ArrowRight,
   BarChart3, Target, History, Sparkles,
-  ChevronRight, ExternalLink, ShieldCheck,
+  ShieldCheck,
   Calculator
 } from 'lucide-react'
-import { COUNTRIES } from '@/constants/countries'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -70,7 +69,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section - Control Total Style */}
+      {/* Hero Section */}
       <main style={{ paddingTop: 160, paddingBottom: 100, overflow: 'hidden' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
 
@@ -167,7 +166,7 @@ export default function LandingPage() {
                   <div style={{ width: 60 }}></div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 32 }}>
+                <div className="mockup-grid" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 32 }}>
                   <div style={{ background: 'white', borderRadius: 28, padding: 32, border: '1px solid #eee' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                       <h3 style={{ fontSize: 18, fontWeight: 900 }}>Control Operativo</h3>
@@ -206,7 +205,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Problem Section (Media 1) */}
+      {/* Problem Section */}
       <section style={{ padding: '80px 5%', background: '#fff' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 60 }}>
@@ -214,7 +213,7 @@ export default function LandingPage() {
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, color: '#1a1a2e', marginTop: 20 }}>¿Tienes problemas con tus transportadoras?</h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+          <div className="problem-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
             {[
               { title: "Cobra de más", desc: "Detecta cobros injustificados en fletes y recupera tu dinero automáticamente analizando cada guía.", icon: "💸", color: "#ef4444" },
               { title: "Tiempos de entrega", desc: "Visualiza qué ciudades y transportadoras están fallando sistemáticamente en sus promesas de entrega.", icon: "⏰", color: "#f59e0b" },
@@ -242,7 +241,7 @@ export default function LandingPage() {
           <h2 style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 900, marginBottom: 16 }}>Lo que lograrás con Pixora</h2>
           <p style={{ fontSize: 18, fontWeight: 500, opacity: 0.9, marginBottom: 64 }}>Transforma tu operación de caos a control total.</p>
 
-          <div style={{
+          <div className="stats-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 16
@@ -259,10 +258,7 @@ export default function LandingPage() {
               { text: "Proyección de crecimiento sostenible", icon: <Sparkles size={20} /> },
               { text: "Análisis por transportadora", icon: <ArrowRight size={20} /> },
               { text: "Análisis por producto con IA", icon: <Zap size={20} /> },
-              { text: "Costeo detallado de productos", icon: <Calculator size={20} /> },
-              { text: "Todo tu negocio en un solo lugar", icon: <Activity size={20} /> },
-              { text: "Aumenta tu tasa de efectividad", icon: <Zap size={20} /> },
-              { text: "Controla tus cancelaciones", icon: <Target size={20} /> }
+              { text: "Costeo detallado de productos", icon: <Calculator size={20} /> }
             ].map((item, i) => (
               <div key={i} style={{
                 background: 'rgba(255, 255, 255, 0.1)',
@@ -341,9 +337,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Audit Transparency Section (Media 2 style) */}
+      {/* Audit Transparency Section */}
       <section id="audit" style={{ padding: '100px 5%', background: '#f0fdf4' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 64, alignItems: 'center' }}>
+        <div className="audit-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 64, alignItems: 'center' }}>
           <div>
             <span style={{ color: '#4CAF50', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2 }}>Auditoría Inteligente</span>
             <h2 style={{ fontSize: 'clamp(32px, 5vw, 42px)', fontWeight: 900, color: '#1a1a2e', marginTop: 12, marginBottom: 24 }}>
@@ -395,7 +391,7 @@ export default function LandingPage() {
           <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color: '#1a1a2e' }}>Más claro que el agua</h2>
           <p style={{ color: '#64748b', fontSize: 16, fontWeight: 500, marginTop: 12, marginBottom: 64 }}>Deja que la herramienta haga la matemática difícil. Tú enfócate en vender.</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+          <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
             {[
               { icon: <Activity color="white" size={20} />, bg: '#4CAF50', title: 'Utilidad Neta REAL', desc: 'No te mientas con ventas brutas. Pixora resta automáticamente costos de producto, fletes, devoluciones y publicidad.' },
               { icon: <ShieldCheck color="white" size={20} />, bg: '#3b82f6', title: 'Detector de Novedades', desc: 'Identifica pedidos estancados, novedades de entrega y devoluciones en tiempo real antes de que afecten tu caja.' },
@@ -426,128 +422,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Inside Look Section */}
-      <section style={{ padding: '100px 5%', background: '#ffffff', textAlign: 'center' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color: '#1a1a2e', marginBottom: 64 }}>Así se ve por dentro</h2>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: 40 }}>
-            <div style={{ background: '#f8fafc', borderRadius: 32, padding: 32, textAlign: 'left', border: '1px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'white', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📊</div>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 900 }}>Tablero Principal</h3>
-                  <p style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>Tu centro de comando. Ve de un vistazo la utilidad neta.</p>
-                </div>
-              </div>
-              <div style={{ background: 'white', borderRadius: 20, height: 300, border: '1px solid #eee', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', padding: 20 }}>
-                <div style={{ width: '100%', height: '100%', background: '#f8fafc', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 10, padding: 15 }}>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <div style={{ flex: 1, height: 60, background: 'white', borderRadius: 8, border: '1px solid #eee' }}></div>
-                    <div style={{ flex: 1, height: 60, background: 'white', borderRadius: 8, border: '1px solid #eee' }}></div>
-                    <div style={{ flex: 1, height: 60, background: 'white', borderRadius: 8, border: '1px solid #eee' }}></div>
-                  </div>
-                  <div style={{ flex: 1, background: 'white', borderRadius: 8, border: '1px solid #eee' }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ background: '#f8fafc', borderRadius: 32, padding: 32, textAlign: 'left', border: '1px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'white', border: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📦</div>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 900 }}>Informe por Productos</h3>
-                  <p style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>Descubre qué producto es realmente rentable.</p>
-                </div>
-              </div>
-              <div style={{ background: 'white', borderRadius: 20, height: 300, border: '1px solid #eee', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', padding: 20 }}>
-                <div style={{ width: '100%', height: '100%', background: '#f8fafc', borderRadius: 12, padding: 15 }}>
-                  <div style={{ height: 20, width: '40%', background: '#4CAF50', opacity: 0.1, borderRadius: 4, marginBottom: 15 }}></div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {[...Array(5)].map((_, j) => (
-                      <div key={j} style={{ height: 32, background: 'white', borderRadius: 6, border: '1px solid #eee', display: 'flex', alignItems: 'center', padding: '0 10px', justifyContent: 'space-between' }}>
-                        <div style={{ width: 80, height: 8, background: '#eee', borderRadius: 4 }}></div>
-                        <div style={{ width: 40, height: 8, background: '#4CAF50', opacity: 0.2, borderRadius: 4 }}></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison Section */}
-      <section style={{ padding: '100px 5%', background: '#f8fafc', textAlign: 'center' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 36, fontWeight: 900, color: '#1a1a2e', marginBottom: 64 }}>¿Por qué Pixora?</h2>
-
-          <div style={{ background: 'white', borderRadius: 32, border: '1px solid #efeff5', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.03)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc' }}>
-                  <th style={{ padding: '24px 32px', fontSize: 13, color: '#64748b', fontWeight: 700 }}>CARACTERÍSTICAS</th>
-                  <th style={{ padding: '24px 32px', fontSize: 13, color: '#64748b', fontWeight: 700 }}>EXCEL TRADICIONAL</th>
-                  <th style={{ padding: '24px 32px', fontSize: 13, color: '#64748b', fontWeight: 700 }}>SOFTWARE COSTOSO</th>
-                  <th style={{ padding: '24px 32px', fontSize: 15, color: '#4CAF50', fontWeight: 900, background: '#f0fdf4' }}>PIXORA AI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { feature: 'Facilidad de uso', excel: '❌ Difícil', soft: 'Regular', pixora: '✅ Muy intuitivo' },
-                  { feature: 'Cálculo de Utilidad Neta', excel: 'Manual / Errores', soft: '✅', pixora: '⚡ Automático' },
-                  { feature: 'Precio Mensual', excel: 'Gratis (lento)', soft: '$50 - $100 USD', pixora: '$26 USD' },
-                  { feature: 'Trazabilidad de Guías', excel: '❌', soft: '✅', pixora: '✅ Detallada' },
-                  { feature: 'Análisis IA', excel: '❌', pixora: '🔥 Incluido' },
-                ].map((row, i) => (
-                  <tr key={i} style={{ borderTop: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '20px 32px', fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{row.feature}</td>
-                    <td style={{ padding: '20px 32px', fontSize: 14, color: '#94a3b8' }}>{row.excel}</td>
-                    <td style={{ padding: '20px 32px', fontSize: 14, color: '#94a3b8' }}>{row.soft}</td>
-                    <td style={{ padding: '20px 32px', fontSize: 14, fontWeight: 800, color: '#166534', background: '#f0fdf4' }}>{row.pixora}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section style={{ padding: '100px 5%', background: '#ffffff', textAlign: 'center' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 36, fontWeight: 900, color: '#1a1a2e', marginBottom: 12 }}>Lo que dicen nuestros <span style={{ color: '#4CAF50' }}>Usuarios</span></h2>
-          <p style={{ color: '#64748b', fontSize: 16, fontWeight: 500, marginBottom: 64 }}>Dropshippers de todo el país que han mejorado su operación con Pixora</p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32 }}>
-            {[
-              { name: "Andrés M.", city: "Bogotá", text: "Antes no sabía si realmente estaba ganando dinero después de fletes. Con Pixora ahora tengo el control centavo a centavo." },
-              { name: "Paola R.", city: "Medellín", text: "El análisis de IA para productos me ahorra horas de trabajo. Ahora lanzo campañas con mucha más confianza." },
-              { name: "Carlos T.", city: "Cali", text: "La mejor inversión para mi tienda. El diario de pauta me permitió detectar que estaba quemando plata en TikTok." }
-            ].map((t, i) => (
-              <div key={i} style={{ padding: 40, borderRadius: 32, background: '#f8fafc', border: '1px solid #efeff5', textAlign: 'left' }}>
-                <p style={{ fontSize: 16, color: '#1a1a2e', fontWeight: 600, lineHeight: 1.6, marginBottom: 24 }}>"{t.text}"</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 50, background: '#4CAF50', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>{t.name[0]}</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 900 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{t.city}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section (Media 3) */}
+      {/* Pricing Section */}
       <section id="pricing" style={{ padding: '100px 5%', background: '#f8fafc', textAlign: 'center' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <span style={{ color: '#4CAF50', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2 }}>Planes a tu medida</span>
           <h2 style={{ fontSize: 36, fontWeight: 900, color: '#1a1a2e', marginTop: 12, marginBottom: 64 }}>Invierte en el futuro de tu rentabilidad</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
+          <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
             {[
               { title: "Plan Mensual", price: "26", period: "mes", desc: "Ideal para tiendas que están empezando a organizar su operación.", btn: "Empezar Mensual", popular: false },
               { title: "Plan Trimestral", price: "69", period: "trimestre", desc: "El balance perfecto entre ahorro y flujo de caja operativo.", btn: "Ahorrar 15%", popular: true, tag: "RECOMENDADO" },
@@ -625,6 +506,19 @@ export default function LandingPage() {
                 @keyframes fadeInUp {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
+                }
+
+                @media (max-width: 768px) {
+                    header { padding: 0 20px !important; height: 70px !important; }
+                    nav { display: none !important; }
+                    main { padding-top: 120px !important; }
+                    h1 { font-size: 38px !important; }
+                    .mockup-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+                    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                    .pricing-grid { grid-template-columns: 1fr !important; }
+                    .features-grid { grid-template-columns: 1fr !important; }
+                    .problem-grid { grid-template-columns: 1fr !important; }
+                    .audit-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
                 }
             `}</style>
     </div>

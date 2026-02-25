@@ -147,10 +147,10 @@ export default function DashboardView() {
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <div style={{ padding: '32px' }}>
+            <div className="dashboard-padding" style={{ padding: '32px' }}>
 
                 {/* Welcome Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
+                <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
                     <div>
                         <h1 style={{ fontSize: 32, fontWeight: 900, color: '#1a1a2e', letterSpacing: '-0.02em' }}>
                             ¡Buen día, {userName}! 👋
@@ -167,7 +167,7 @@ export default function DashboardView() {
                 </div>
 
                 {/* Primary KPIs - Dashboard Style */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 32 }}>
+                <div className="dashboard-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 32 }}>
                     <KPICard
                         label="Utilidad Real"
                         value={`${activeCountry.symbol}${totals.profit.toLocaleString()}`}
@@ -203,7 +203,7 @@ export default function DashboardView() {
                 </div>
 
                 {/* Main section: Control Total Style */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 24, marginBottom: 32 }}>
+                <div className="dashboard-grid-main" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 24, marginBottom: 32 }}>
 
                     {/* Control Total Breakdown */}
                     <div style={{
@@ -228,7 +228,7 @@ export default function DashboardView() {
                                 <span style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', background: '#f0fdf4', padding: '4px 12px', borderRadius: 20 }}>Auditoría Activa 🟢</span>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
+                            <div className="operative-breakdown-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                     <DetailRow label="Facturación Bruta" value={`${activeCountry.symbol}${totals.revenue.toLocaleString()}`} icon={<DollarSign size={14} />} />
                                     <DetailRow label="Costo de Mercancía" value={`${activeCountry.symbol}${(totals.sales * 35000).toLocaleString()}`} icon={<ShoppingCart size={14} />} />
@@ -295,7 +295,7 @@ export default function DashboardView() {
                 </div>
 
                 {/* Bottom Quick Actions / Feature Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+                <div className="dashboard-grid-bottom" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
                     <ActionCard
                         title="Auditoría de Fletes"
                         desc="Cruza tus guías con las transportadoras para evitar cobros fantasmas."
@@ -319,6 +319,19 @@ export default function DashboardView() {
 
             <style jsx>{`
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @media (max-width: 1024px) {
+                    .dashboard-grid-main { grid-template-columns: 1fr !important; }
+                    .dashboard-grid-bottom { grid-template-columns: 1fr !important; }
+                }
+                @media (max-width: 768px) {
+                    .dashboard-padding { padding: 16px !important; }
+                    .dashboard-header { flex-direction: column !important; alignItems: flex-start !important; gap: 16px !important; }
+                    .dashboard-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+                    .operative-breakdown-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+                }
+                @media (max-width: 480px) {
+                    .dashboard-kpi-grid { grid-template-columns: 1fr !important; }
+                }
             `}</style>
         </div>
     )

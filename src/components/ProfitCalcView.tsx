@@ -272,34 +272,51 @@ export default function ProfitCalcView() {
                 }
             })
             if (imports.length === 0) {
-                alert('No se encontraron datos válidos en el archivo. Revisa que las columnas tengan nombres correctos (Fecha, Producto, Ventas, etc.)')
+                alert('No se encontraron datos procesables en el Excel. Asegúrate de que las columnas se llamen: Producto, Ventas, Precio, Ads, Costo, Flete.')
+                setImportLoading(false)
                 return
             }
 
+            console.log('Intentando insertar registros:', imports)
+
             const { data: inserted, error } = await supabase.from('profit_records').insert(imports).select()
 
-            if (error) throw error
+            if (error) {
+                console.error('Error de Supabase al insertar:', error)
+                throw error
+            }
 
-            if (inserted) {
-                const formatted = inserted.map((r: any) => ({
-                    id: r.id,
-                    date: r.date,
-                    type: r.type,
-                    productName: r.product_name,
-                    cancelRate: r.cancel_rate,
-                    returnRate: r.return_rate,
-                    productCost: r.product_cost,
-                    baseShipping: r.base_shipping,
-                    returnShipping: r.return_shipping,
-                    adminCosts: r.admin_costs,
-                    shopifySales: r.shopify_sales,
-                    adSpend: r.ad_spend,
-                    tiktokSpend: r.tiktok_spend || 0,
-                    otherSpend: r.other_spend || 0,
-                    sellingPrice: r.selling_price
-                }))
-                setRecords(prev => [...formatted, ...prev])
-                alert(`¡${inserted.length} registros importados con éxito!`)
+            if (inserted && inserted.length > 0) {
+                console.log('Registros insertados con éxito:', inserted)
+                // Refetch to ensure total sync and correct ordering
+                const { data: refetched } = await supabase
+                    .from('profit_records')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+
+                if (refetched) {
+                    const formatted = refetched.map((r: any) => ({
+                        id: r.id,
+                        date: r.date,
+                        type: r.type,
+                        productName: r.product_name,
+                        cancelRate: r.cancel_rate || 0,
+                        returnRate: r.return_rate || 0,
+                        productCost: r.product_cost || 0,
+                        baseShipping: r.base_shipping || 0,
+                        returnShipping: r.return_shipping || 0,
+                        adminCosts: r.admin_costs || 0,
+                        shopifySales: r.shopify_sales || 0,
+                        adSpend: r.ad_spend || 0,
+                        tiktokSpend: r.tiktok_spend || 0,
+                        otherSpend: r.other_spend || 0,
+                        sellingPrice: r.selling_price || 0
+                    }))
+                    setRecords(formatted)
+                }
+                alert(`¡${inserted.length} registros importados y sincronizados!`)
+            } else {
+                alert('No se insertaron registros. Verifica el formato del archivo.')
             }
         } catch (error) {
             alert('Error al importar')
@@ -345,10 +362,10 @@ export default function ProfitCalcView() {
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 40px' }}>
+            <div className="profit-padding" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 40px' }}>
 
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '32px 0 24px' }}>
+                <div className="profit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '32px 0 24px' }}>
                     <div>
                         <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
                             <div style={{ background: '#4CAF50', width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -384,14 +401,14 @@ export default function ProfitCalcView() {
                 {/* History Table — main content */}
                 <div className="card" style={{ padding: 0, borderRadius: 28, overflow: 'hidden', border: 'none', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
                     {/* Table Header */}
-                    <div style={{ padding: '24px 32px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc' }}>
+                    <div className="table-header-flex" style={{ padding: '24px 32px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc' }}>
                         <div>
                             <h3 style={{ fontSize: 16, fontWeight: 900, color: '#1a1a2e' }}>HISTORIAL DE OPERACIONES</h3>
                             <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginTop: 4 }}>
                                 {dayRecords.length} registros para el periodo • Haz clic en una fila para editar
                             </p>
                         </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div className="table-header-kpi" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                             <div style={{ textAlign: 'right', borderRight: '1px solid #eee', paddingRight: 20 }}>
                                 <span style={{ fontSize: 9, fontWeight: 900, color: '#999', textTransform: 'uppercase', display: 'block' }}>Utilidad Total</span>
                                 <div style={{ fontSize: 22, fontWeight: 950, color: dayProfit >= 0 ? '#2ecc71' : '#e74c3c', marginTop: 2 }}>
@@ -596,7 +613,7 @@ export default function ProfitCalcView() {
 
                                 <div style={{ padding: '28px 32px' }}>
                                     {/* KPI row */}
-                                    <div style={{ display: 'flex', gap: 14, marginBottom: 28, flexWrap: 'wrap' }}>
+                                    <div className="kpi-row-reports" style={{ display: 'flex', gap: 14, marginBottom: 28, flexWrap: 'wrap' }}>
                                         {[
                                             { label: 'Utilidad Total', value: `${activeCountry.symbol}${totalProfit.toLocaleString()}`, color: totalProfit >= 0 ? '#4CAF50' : '#e74c3c' },
                                             { label: 'Gasto en Ads', value: `${activeCountry.symbol}${totalAdSpend.toLocaleString()}`, color: '#e74c3c' },
@@ -758,7 +775,7 @@ export default function ProfitCalcView() {
                                 </div>
 
                                 {/* Modal Body */}
-                                <div style={{ padding: '36px 36px 40px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 36 }}>
+                                <div className="modal-body-grid" style={{ padding: '36px 36px 40px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 36 }}>
 
                                     {/* Left: Inputs */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -900,6 +917,21 @@ export default function ProfitCalcView() {
                         </div>
                     )
                 })()}
+
+                <style jsx>{`
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                    @media (max-width: 1024px) {
+                        .profit-header { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+                        .modal-body-grid { grid-template-columns: 1fr !important; }
+                        .modal-sidebar { position: static !important; width: 100% !important; }
+                    }
+                    @media (max-width: 768px) {
+                        .profit-padding { padding: 0 16px 24px !important; }
+                        .table-header-flex { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+                        .table-header-kpi { border-right: none !important; padding-right: 0 !important; text-align: left !important; }
+                        .kpi-row-reports { flex-direction: column !important; }
+                    }
+                `}</style>
             </div>
         </div>
     )

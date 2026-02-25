@@ -72,7 +72,7 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#f4f7fa] font-sans text-[#1e293b]">
-            <div className="w-full max-w-[440px] bg-white rounded-[48px] shadow-[0_30px_100px_rgba(0,0,0,0.08)] px-8 py-32 flex flex-col items-center">
+            <div className="w-full max-w-[440px] bg-white rounded-[32px] md:rounded-[48px] shadow-[0_30px_100px_rgba(0,0,0,0.08)] px-6 md:px-8 py-16 md:py-32 flex flex-col items-center">
 
                 {/* Visual Header */}
                 <div className="mb-12 flex flex-col items-center">
@@ -196,8 +196,8 @@ export default function LoginPage() {
             </div>
 
             {/* Copyright Style from Reference */}
-            <div className="absolute bottom-10 left-0 right-0 text-center pointer-events-none opacity-20 capitalize">
-                <p className="text-[11px] font-black tracking-[0.2em] text-[#1e293b]">© 2026 Pixora operating software</p>
+            <div className="absolute bottom-6 md:bottom-10 left-0 right-0 text-center pointer-events-none opacity-20 capitalize px-4">
+                <p className="text-[10px] md:text-[11px] font-black tracking-[0.2em] text-[#1e293b]">© 2026 Pixora operating software</p>
             </div>
         </div>
     )
