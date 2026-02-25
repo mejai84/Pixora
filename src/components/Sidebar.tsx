@@ -65,7 +65,6 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
     }
 
     return (
-    return (
         <aside className="w-[320px] max-w-[90vw] flex-shrink-0 flex flex-col bg-white text-gray-700 h-full overflow-y-auto custom-scrollbar border-r border-gray-100 shadow-xl shadow-gray-200/50 z-30">
             {/* Header / Logo */}
             <div className="pl-14 pr-10 py-12 flex items-center gap-4">
