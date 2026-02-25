@@ -118,7 +118,10 @@ export default function MarketingView() {
             .select()
             .single()
 
-        if (data) {
+        if (error) {
+            console.error('Error al crear campaña:', error)
+            alert('Error al crear campaña: ' + error.message + '\n\nTIP: Verifica si ejecutaste el SQL en Supabase para crear la tabla "marketing_spend".')
+        } else if (data) {
             setRecords([data, ...records])
         }
         setIsAdding(false)
