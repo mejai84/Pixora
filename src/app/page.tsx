@@ -534,17 +534,7 @@ export default function HomePage() {
               <span className="top-header-title">{getViewTitle()}</span>
             </div>
 
-            <div className="top-header-actions">
-              <div className="top-header-icon">
-                <Search size={18} />
-              </div>
-              <div className="top-header-icon">
-                <User size={18} />
-              </div>
-              <div className="top-header-icon">
-                <ShoppingBag size={18} />
-              </div>
-            </div>
+            <div className="top-header-actions" style={{ width: 80 }}></div>
           </div>
 
           {/* Content Area */}
