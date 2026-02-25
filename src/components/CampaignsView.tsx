@@ -77,7 +77,11 @@ export default function CampaignsView() {
         fetchCampaigns()
     }, [])
 
+    const [isAdding, setIsAdding] = useState(false)
+
     const addRow = async () => {
+        if (isAdding) return
+        setIsAdding(true)
         const newRowData = {
             campaign_id: Math.random().toString(36).substr(2, 9),
             date: new Date().toISOString().split('T')[0],
@@ -101,39 +105,49 @@ export default function CampaignsView() {
 
         try {
             const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data, error } = await supabase
-                    .from('campaign_records')
-                    .insert({ user_id: user.id, ...newRowData })
-                    .select()
+            if (!user) {
+                alert('Debes iniciar sesión para lanzar un producto.')
+                setIsAdding(false)
+                return
+            }
 
-                if (data && data[0]) {
-                    const r = data[0]
-                    const formatted: CampaignRow = {
-                        id: r.id,
-                        date: r.date,
-                        store: r.store,
-                        developer: r.developer,
-                        productName: r.product_name,
-                        process: r.process,
-                        category: r.category,
-                        variations: r.variations,
-                        ttDate: r.tt_date,
-                        fbDate: r.fb_date,
-                        supplier: r.supplier,
-                        platformCode: r.platform_code,
-                        supplierCost: r.supplier_cost,
-                        sellingPrice: r.selling_price,
-                        revised: r.revised,
-                        adAccount: r.ad_account,
-                        fanPage: r.fan_page,
-                        landingLink: r.landing_link
-                    }
-                    setRows([formatted, ...rows])
+            const { data, error } = await supabase
+                .from('campaign_records')
+                .insert({ user_id: user.id, ...newRowData })
+                .select()
+
+            if (error) {
+                console.error('Error adding campaign:', error.message)
+                alert('Error al guardar en la base de datos: ' + error.message)
+            } else if (data && data[0]) {
+                const r = data[0]
+                const formatted: CampaignRow = {
+                    id: r.id,
+                    date: r.date,
+                    store: r.store,
+                    developer: r.developer,
+                    productName: r.product_name,
+                    process: r.process,
+                    category: r.category,
+                    variations: r.variations,
+                    ttDate: r.tt_date,
+                    fbDate: r.fb_date,
+                    supplier: r.supplier,
+                    platformCode: r.platform_code,
+                    supplierCost: r.supplier_cost,
+                    sellingPrice: r.selling_price,
+                    revised: r.revised,
+                    adAccount: r.ad_account,
+                    fanPage: r.fan_page,
+                    landingLink: r.landing_link
                 }
+                setRows([formatted, ...rows])
             }
         } catch (error) {
             console.error('Error adding campaign:', error)
+            alert('Ocurrió un error inesperado al lanzar el producto.')
+        } finally {
+            setIsAdding(false)
         }
     }
 
@@ -192,8 +206,18 @@ export default function CampaignsView() {
                         <button className="btn-secondary" style={{ padding: '8px 16px' }}>
                             <Filter size={16} /> Filtrar
                         </button>
-                        <button onClick={addRow} className="btn-primary" style={{ padding: '8px 20px' }}>
-                            <Plus size={18} /> Lanzar Producto
+                        <button
+                            onClick={addRow}
+                            className="btn-primary"
+                            style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}
+                            disabled={isAdding}
+                        >
+                            {isAdding ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Plus size={18} />
+                            )}
+                            {isAdding ? 'Lanzando...' : 'Lanzar Producto'}
                         </button>
                     </div>
                 </div>
