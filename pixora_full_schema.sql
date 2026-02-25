@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS profit_records (
     admin_costs FLOAT DEFAULT 0,
     shopify_sales FLOAT DEFAULT 0,
     ad_spend FLOAT DEFAULT 0,
+    tiktok_spend FLOAT DEFAULT 0,
+    other_spend FLOAT DEFAULT 0,
     selling_price FLOAT DEFAULT 0,
     country TEXT DEFAULT 'CO'
 );

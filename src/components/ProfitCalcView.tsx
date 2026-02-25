@@ -771,13 +771,13 @@ export default function ProfitCalcView() {
                                             <div style={{ fontSize: 11, fontWeight: 900, color: '#3498db', textTransform: 'uppercase', marginBottom: 16 }}>📊 Métricas de Venta (Shopify)</div>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                                                 <Field label="Ventas Shopify">
-                                                    <input type="number" value={activeRecord.shopifySales} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { shopifySales: Number(e.target.value) })} className="input-field" style={{ fontWeight: 800, color: '#3498db' }} />
+                                                    <input type="number" value={activeRecord.shopifySales === 0 ? '' : activeRecord.shopifySales} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { shopifySales: Number(e.target.value) })} className="input-field" style={{ fontWeight: 800, color: '#3498db' }} />
                                                 </Field>
                                                 <Field label="% Cancelados">
-                                                    <input type="number" value={activeRecord.cancelRate} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { cancelRate: Number(e.target.value) })} className="input-field" style={{ color: '#e74c3c' }} />
+                                                    <input type="number" value={activeRecord.cancelRate === 0 ? '' : activeRecord.cancelRate} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { cancelRate: Number(e.target.value) })} className="input-field" style={{ color: '#e74c3c' }} />
                                                 </Field>
                                                 <Field label="% Devolución">
-                                                    <input type="number" value={activeRecord.returnRate} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { returnRate: Number(e.target.value) })} className="input-field" style={{ color: '#e74c3c' }} />
+                                                    <input type="number" value={activeRecord.returnRate === 0 ? '' : activeRecord.returnRate} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { returnRate: Number(e.target.value) })} className="input-field" style={{ color: '#e74c3c' }} />
                                                 </Field>
                                                 <Field label="Ventas Efectivas">
                                                     <div className="input-field" style={{ background: '#e8f5ff', fontWeight: 900, color: '#2980b9' }}>{m.effectiveSales.toFixed(1)}</div>
@@ -790,10 +790,10 @@ export default function ProfitCalcView() {
                                             <div style={{ fontSize: 11, fontWeight: 900, color: '#e67e22', textTransform: 'uppercase', marginBottom: 16 }}>🚚 Logística y Precio</div>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                                                 <Field label="Precio de Venta">
-                                                    <input type="number" value={activeRecord.sellingPrice} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { sellingPrice: Number(e.target.value) })} className="input-field" style={{ fontWeight: 800, color: '#2ecc71' }} />
+                                                    <input type="number" value={activeRecord.sellingPrice === 0 ? '' : activeRecord.sellingPrice} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { sellingPrice: Number(e.target.value) })} className="input-field" style={{ fontWeight: 800, color: '#2ecc71' }} />
                                                 </Field>
                                                 <Field label="Flete Base">
-                                                    <input type="number" value={activeRecord.baseShipping} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { baseShipping: Number(e.target.value) })} className="input-field" />
+                                                    <input type="number" value={activeRecord.baseShipping === 0 ? '' : activeRecord.baseShipping} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { baseShipping: Number(e.target.value) })} className="input-field" />
                                                 </Field>
                                                 <Field label="Flete c/ Dev" help="= Flete / (1 - %Dev)">
                                                     <div className="input-field" style={{ background: '#f5f5f5', fontWeight: 800 }}>{activeCountry.symbol}{m.fleteConDev.toLocaleString()}</div>
@@ -806,16 +806,16 @@ export default function ProfitCalcView() {
                                             <div style={{ padding: 24, background: '#fdf9ff', borderRadius: 20, border: '1px solid #f0e0ff' }}>
                                                 <div style={{ fontSize: 11, fontWeight: 900, color: '#9b59b6', textTransform: 'uppercase', marginBottom: 16 }}>📢 Pauta Publicitaria</div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                                    <Field label="Meta Ads"><input type="number" value={activeRecord.adSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { adSpend: Number(e.target.value) })} className="input-field" /></Field>
-                                                    <Field label="TikTok Ads"><input type="number" value={activeRecord.tiktokSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { tiktokSpend: Number(e.target.value) })} className="input-field" /></Field>
-                                                    <Field label="Otras Redes"><input type="number" value={activeRecord.otherSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { otherSpend: Number(e.target.value) })} className="input-field" /></Field>
+                                                    <Field label="Meta Ads"><input type="number" value={activeRecord.adSpend === 0 ? '' : activeRecord.adSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { adSpend: Number(e.target.value) })} className="input-field" /></Field>
+                                                    <Field label="TikTok Ads"><input type="number" value={activeRecord.tiktokSpend === 0 ? '' : activeRecord.tiktokSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { tiktokSpend: Number(e.target.value) })} className="input-field" /></Field>
+                                                    <Field label="Otras Redes"><input type="number" value={activeRecord.otherSpend === 0 ? '' : activeRecord.otherSpend} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { otherSpend: Number(e.target.value) })} className="input-field" /></Field>
                                                 </div>
                                             </div>
                                             <div style={{ padding: 24, background: '#f9f9f9', borderRadius: 20, border: '1px solid #eee' }}>
                                                 <div style={{ fontSize: 11, fontWeight: 900, color: '#666', textTransform: 'uppercase', marginBottom: 16 }}>📦 Costos Fijos</div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                                    <Field label="Costo Proveedor"><input type="number" value={activeRecord.productCost} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { productCost: Number(e.target.value) })} className="input-field" /></Field>
-                                                    <Field label="Gastos Operativos"><input type="number" value={activeRecord.adminCosts} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { adminCosts: Number(e.target.value) })} className="input-field" /></Field>
+                                                    <Field label="Costo Proveedor"><input type="number" value={activeRecord.productCost === 0 ? '' : activeRecord.productCost} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { productCost: Number(e.target.value) })} className="input-field" /></Field>
+                                                    <Field label="Gastos Operativos"><input type="number" value={activeRecord.adminCosts === 0 ? '' : activeRecord.adminCosts} onFocus={e => e.target.select()} onChange={e => updateRecord(activeRecord.id, { adminCosts: Number(e.target.value) })} className="input-field" /></Field>
                                                 </div>
                                             </div>
                                         </div>
