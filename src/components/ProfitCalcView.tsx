@@ -103,6 +103,12 @@ export default function ProfitCalcView() {
     const [filterMode, setFilterMode] = useState<'day' | 'range'>('day')
     const [isSyncing, setIsSyncing] = useState(false)
     const [importLoading, setImportLoading] = useState(false)
+    const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
+
+    const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
+        setToast({ msg, type })
+        setTimeout(() => setToast(null), 4000)
+    }
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
@@ -173,7 +179,7 @@ export default function ProfitCalcView() {
             if (isLocal) {
                 // First time saving — INSERT a new row
                 const { data: { user } } = await supabase.auth.getUser()
-                if (!user) { alert('Sesión expirada.'); return }
+                if (!user) { showToast('❌ Sesión expirada. Vuelve a iniciar sesión.', 'error'); return }
 
                 const { data, error } = await supabase.from('profit_records').insert({
                     ...payload,
@@ -188,16 +194,16 @@ export default function ProfitCalcView() {
                 // Replace local temp ID with real DB UUID
                 setRecords(prev => prev.map(r => r.id === record.id ? { ...r, id: data.id } : r))
                 setSelectedId(data.id)
-                alert('¡Registro guardado correctamente!')
+                showToast('✅ ¡Registro guardado correctamente en la base de datos!', 'success')
             } else {
                 // Already in DB — UPDATE
                 const { error } = await supabase.from('profit_records').update(payload).eq('id', record.id)
                 if (error) throw error
-                alert('¡Sincronizado correctamente!')
+                showToast('✅ ¡Registro sincronizado correctamente!', 'success')
             }
         } catch (error: any) {
             console.error('Error syncing:', error)
-            alert('Error al guardar: ' + (error.message || 'revisa la consola'))
+            showToast('❌ Error al guardar: ' + (error.message || 'revisa la consola'), 'error')
         } finally {
             setIsSyncing(false)
         }
@@ -218,14 +224,14 @@ export default function ProfitCalcView() {
         if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) return
         try {
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) { alert('Sesión expirada.'); return }
+            if (!user) { showToast('❌ Sesión expirada.', 'error'); return }
             const { error } = await supabase.from('profit_records').delete().eq('user_id', user.id)
             if (error) throw error
             setRecords([])
             setSelectedId(null)
-            alert('¡Historial borrado!')
+            showToast('🗑️ Historial borrado correctamente.', 'info')
         } catch (err: any) {
-            alert('Error al borrar. Limpiando vista local.')
+            showToast('❌ Error al borrar. Limpiando vista local.', 'error')
             setRecords([])
         }
     }
@@ -246,27 +252,47 @@ export default function ProfitCalcView() {
                 const k = Object.keys(row).find(k => keys.some(pk => k.toLowerCase().trim() === pk.toLowerCase().trim()))
                 return k ? row[k] : def
             }
+            // Helper: convert Excel date serial (number) or string to YYYY-MM-DD
+            const parseExcelDate = (val: any): string => {
+                if (!val) return filterDate
+                if (typeof val === 'number') {
+                    // Excel serial date: days since 1900-01-01 (with leap year bug offset)
+                    const excelEpoch = new Date(1899, 11, 30)
+                    const d = new Date(excelEpoch.getTime() + val * 86400000)
+                    return d.toISOString().split('T')[0]
+                }
+                const s = String(val).trim()
+                // Try common formats: DD/MM/YYYY, MM/DD/YYYY, or ISO
+                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+                    const parts = s.split('/')
+                    // Assume DD/MM/YYYY (common in Spanish spreadsheets)
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
+                }
+                if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10)
+                return filterDate
+            }
             const imports = jsonData.filter(row => Object.keys(row).length > 2).map(row => {
-                const shopifySales = Number(getVal(row, ['Ventas', 'Ventas Shopify', 'Sales'], 0))
+                const shopifySales = Number(getVal(row, ['Ventas', 'Ventas Shopify', 'Sales', 'Ventas Efectivas'], 0))
                 const cpa = Number(getVal(row, ['CPA', 'Costo Ad'], 0))
-                let adSpend = Number(getVal(row, ['Ads', 'Gasto Ads', 'ad_spend', 'Publicidad'], 0))
+                let adSpend = Number(getVal(row, ['Ads', 'Gasto Ads', 'ad_spend', 'Publicidad', 'Gasto Total Publicidad', 'Cuenta X', 'CUENTA X'], 0))
                 if (adSpend === 0 && cpa > 0 && shopifySales > 0) adSpend = cpa * shopifySales
+                const rawDate = getVal(row, ['Fecha', 'Date', 'DIA', 'Día'], null)
                 return {
                     user_id: user.id,
                     record_id: Math.random().toString(36).substr(2, 9),
-                    date: getVal(row, ['Fecha', 'Date'], filterDate),
-                    type: getVal(row, ['Estado', 'Type'], 'Testeo'),
-                    product_name: getVal(row, ['Producto', 'Product'], ''),
-                    shopify_sales: shopifySales,
-                    selling_price: Number(getVal(row, ['Precio', 'Price'], 0)),
+                    date: parseExcelDate(rawDate),
+                    type: getVal(row, ['Estado', 'Estado de la Campaña', 'Tipo de Producto', 'Type'], 'Testeo'),
+                    product_name: getVal(row, ['Producto', 'PRODUCTO', 'Product'], ''),
+                    shopify_sales: Number(getVal(row, ['Ventas', 'Ventas Shopify', 'Sales'], 0)),
+                    selling_price: Number(getVal(row, ['Precio', 'Precio de Venta', 'Price'], 0)),
                     ad_spend: adSpend,
-                    tiktok_spend: 0,
-                    other_spend: 0,
-                    product_cost: Number(getVal(row, ['Costo', 'product_cost'], 0)),
-                    base_shipping: Number(getVal(row, ['Flete', 'base_shipping'], 0)),
-                    admin_costs: Number(getVal(row, ['Admin', 'admin_costs'], 0)),
-                    cancel_rate: Number(getVal(row, ['Cancelados', 'cancel_rate'], 0)),
-                    return_rate: Number(getVal(row, ['Devoluciones', 'return_rate'], 0)),
+                    tiktok_spend: Number(getVal(row, ['TikTok', 'TIKTOK', 'TikTok Ads', 'tiktok_spend'], 0)),
+                    other_spend: Number(getVal(row, ['Otras Redes', 'other_spend', 'CUENTA X'], 0)),
+                    product_cost: Number(getVal(row, ['Costo', 'Costo de Proveedor', 'product_cost'], 0)),
+                    base_shipping: Number(getVal(row, ['Flete', 'Flete con dev', 'base_shipping'], 0)),
+                    admin_costs: Number(getVal(row, ['Admin', 'Gastos Operativos', 'admin_costs'], 0)),
+                    cancel_rate: Number(getVal(row, ['Cancelados', 'CANCELADO', 'cancel_rate'], 0)),
+                    return_rate: Number(getVal(row, ['Devoluciones', 'DEVOLUCION', 'return_rate'], 0)),
                     return_shipping: 0,
                     country
                 }
@@ -314,12 +340,12 @@ export default function ProfitCalcView() {
                     }))
                     setRecords(formatted)
                 }
-                alert(`¡${inserted.length} registros importados y sincronizados!`)
+                showToast(`✅ ¡${inserted.length} registros importados y guardados en la base de datos!`, 'success')
             } else {
-                alert('No se insertaron registros. Verifica el formato del archivo.')
+                showToast('⚠️ No se insertaron registros. Verifica el formato del archivo.', 'info')
             }
         } catch (error) {
-            alert('Error al importar')
+            showToast('❌ Error al importar. Revisa el formato del archivo.', 'error')
         } finally {
             setImportLoading(false)
         }
@@ -357,11 +383,36 @@ export default function ProfitCalcView() {
     }
 
     const currentMetrics = activeRecord ? calculateMetrics(activeRecord) : null
-    const dayRecords = records
+
+    // Apply date filter to the history table
+    const dayRecords = records.filter(r => {
+        if (filterMode === 'day') return r.date === filterDate
+        return r.date >= filterDate && r.date <= filterEndDate
+    })
     const dayProfit = dayRecords.reduce((acc: number, r: DailyRecord) => acc + calculateMetrics(r).totalProfit, 0)
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.3s ease' }}>
+
+            {/* ===== TOAST NOTIFICATION ===== */}
+            {toast && (
+                <div style={{
+                    position: 'fixed', top: 24, right: 24, zIndex: 9999,
+                    background: toast.type === 'success' ? '#0f5132' : toast.type === 'error' ? '#842029' : '#084298',
+                    color: 'white', padding: '14px 22px', borderRadius: 16,
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.25)',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    maxWidth: 420, fontSize: 13, fontWeight: 700,
+                    animation: 'fadeIn 0.3s ease',
+                    border: `1px solid ${toast.type === 'success' ? '#198754' : toast.type === 'error' ? '#dc3545' : '#0d6efd'}40`
+                }}>
+                    <div style={{ fontSize: 20 }}>
+                        {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : '⚠️'}
+                    </div>
+                    <div style={{ flex: 1 }}>{toast.msg}</div>
+                    <button onClick={() => setToast(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 24, height: 24, borderRadius: 8, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                </div>
+            )}
             <div className="profit-padding" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 40px' }}>
 
                 {/* Header */}
@@ -401,15 +452,42 @@ export default function ProfitCalcView() {
                 {/* History Table — main content */}
                 <div className="card" style={{ padding: 0, borderRadius: 28, overflow: 'hidden', border: 'none', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
                     {/* Table Header */}
-                    <div className="table-header-flex" style={{ padding: '24px 32px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc' }}>
+                    <div className="table-header-flex" style={{ padding: '20px 32px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc', flexWrap: 'wrap', gap: 12 }}>
                         <div>
                             <h3 style={{ fontSize: 16, fontWeight: 900, color: '#1a1a2e' }}>HISTORIAL DE OPERACIONES</h3>
                             <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginTop: 4 }}>
                                 {dayRecords.length} registros para el periodo • Haz clic en una fila para editar
                             </p>
                         </div>
-                        <div className="table-header-kpi" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <div style={{ textAlign: 'right', borderRight: '1px solid #eee', paddingRight: 20 }}>
+                        <div className="table-header-kpi" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                            {/* Date range filter */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f8f8fc', borderRadius: 14, padding: '6px 10px', border: '1px solid #eee' }}>
+                                <Calendar size={13} color="#999" />
+                                <div style={{ display: 'flex', background: '#ededf3', borderRadius: 8, overflow: 'hidden' }}>
+                                    {([['day', 'Día'], ['range', 'Rango']] as const).map(([v, label]) => (
+                                        <button key={v} onClick={() => setFilterMode(v)} style={{ padding: '4px 10px', fontSize: 10, fontWeight: 800, border: 'none', cursor: 'pointer', background: filterMode === v ? '#1a1a2e' : 'transparent', color: filterMode === v ? 'white' : '#888', transition: 'all 0.2s' }}>
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <input
+                                    type="date" value={filterDate}
+                                    onChange={e => setFilterDate(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', fontSize: 12, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer' }}
+                                />
+                                {filterMode === 'range' && (
+                                    <>
+                                        <span style={{ color: '#ccc', fontSize: 12, fontWeight: 700 }}>→</span>
+                                        <input
+                                            type="date" value={filterEndDate}
+                                            onChange={e => setFilterEndDate(e.target.value)}
+                                            style={{ border: 'none', background: 'transparent', fontSize: 12, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer' }}
+                                        />
+                                    </>
+                                )}
+                            </div>
+                            {/* Utilidad Total */}
+                            <div style={{ textAlign: 'right', borderLeft: '1px solid #eee', paddingLeft: 16 }}>
                                 <span style={{ fontSize: 9, fontWeight: 900, color: '#999', textTransform: 'uppercase', display: 'block' }}>Utilidad Total</span>
                                 <div style={{ fontSize: 22, fontWeight: 950, color: dayProfit >= 0 ? '#2ecc71' : '#e74c3c', marginTop: 2 }}>
                                     {activeCountry.symbol}{dayProfit.toLocaleString()}
