@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Play, Pause, RotateCcw, Coffee, Brain, Timer as TimerIcon, Volume2, VolumeX, Maximize2, Move, Minimize2, Zap, X, ChevronRight, ChevronDown } from 'lucide-react'
+import { Play, Pause, RotateCcw, Coffee, Brain, Timer as TimerIcon, Volume2, VolumeX, Maximize2, Move, Minimize2, Zap, X, ChevronRight, ChevronDown, ExternalLink } from 'lucide-react'
 
 type Mode = 'pomodoro' | 'short' | 'long'
 
@@ -23,6 +23,8 @@ export default function PomodoroTimer() {
     const [position, setPosition] = useState({ x: 24, y: 24 }) // bottom, right offsets
     const [isDragging, setIsDragging] = useState(false)
     const [activeTask, setActiveTask] = useState<any>(null)
+    const [startTime, setStartTime] = useState<number | null>(null)
+    const [initialTimeLeft, setInitialTimeLeft] = useState(MODES.pomodoro.minutes * 60)
 
     const dragRef = useRef<HTMLDivElement>(null)
     const dragOffset = useRef({ x: 0, y: 0 })
@@ -33,19 +35,38 @@ export default function PomodoroTimer() {
     const progress = (timeLeft / (MODES[mode].minutes * 60)) * 100
 
     useEffect(() => {
-        if (isActive && timeLeft > 0) {
+        if (isActive && startTime) {
             timerRef.current = setInterval(() => {
-                setTimeLeft(prev => prev - 1)
+                const elapsed = Math.floor((Date.now() - startTime) / 1000)
+                const newTimeLeft = Math.max(0, initialTimeLeft - elapsed)
+                setTimeLeft(newTimeLeft)
+
+                if (newTimeLeft === 0) {
+                    handleComplete()
+                }
             }, 1000)
-        } else if (timeLeft === 0) {
-            handleComplete()
         } else {
             if (timerRef.current) clearInterval(timerRef.current)
         }
         return () => {
             if (timerRef.current) clearInterval(timerRef.current)
         }
-    }, [isActive, timeLeft])
+    }, [isActive, startTime, initialTimeLeft])
+
+    // Sync state for pop-out - Use a source ID to avoid loops
+    const windowId = useRef(typeof window !== 'undefined' ? Math.random().toString(36).substring(7) : 'main').current
+
+    useEffect(() => {
+        const state = {
+            mode,
+            isActive,
+            startTime,
+            initialTimeLeft,
+            lastUpdate: Date.now(),
+            source: windowId
+        }
+        localStorage.setItem('pixora_pomodoro_sync', JSON.stringify(state))
+    }, [isActive, mode, startTime, initialTimeLeft])
 
     useEffect(() => {
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
@@ -74,9 +95,33 @@ export default function PomodoroTimer() {
             }
         }
 
+        const handleSync = () => {
+            const saved = localStorage.getItem('pixora_pomodoro_sync')
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved)
+                    // Don't sync with our own updates
+                    if (state.source === windowId) return
+
+                    // Check if the update is fresh
+                    if (Date.now() - state.lastUpdate < 3000) {
+                        setMode(state.mode)
+                        setIsActive(state.isActive)
+                        setStartTime(state.startTime)
+                        setInitialTimeLeft(state.initialTimeLeft)
+                        // TimeLeft will be recalculated by the interval or the next render
+                    }
+                } catch (e) { }
+            }
+        }
+
         checkTask()
+        handleSync()
         window.addEventListener('pixora_task_focus', checkTask)
-        window.addEventListener('storage', checkTask)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'pixora_active_task') checkTask()
+            if (e.key === 'pixora_pomodoro_sync') handleSync()
+        })
 
         return () => {
             window.removeEventListener('pixora_task_focus', checkTask)
@@ -112,12 +157,59 @@ export default function PomodoroTimer() {
         setIsActive(newActive)
 
         if (newActive) {
+            setStartTime(Date.now())
+            setInitialTimeLeft(timeLeft)
             playSound('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3')
+        } else {
+            setStartTime(null)
         }
 
         if (newActive && !isFloating) {
             setIsFloating(true)
         }
+    }
+
+    const handlePopOut = async () => {
+        // Document Picture-in-Picture (Available in Chrome/Edge 116+)
+        if ('documentPictureInPicture' in window) {
+            try {
+                const pipWindow = await (window as any).documentPictureInPicture.requestWindow({
+                    width: 250,
+                    height: 350,
+                });
+
+                // Copy styles to PIP window
+                [...document.styleSheets].forEach((styleSheet) => {
+                    try {
+                        const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                        const style = document.createElement('style');
+                        style.textContent = cssRules;
+                        pipWindow.document.head.appendChild(style);
+                    } catch (e) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.type = styleSheet.type;
+                        link.media = styleSheet.media.toString();
+                        link.href = styleSheet.href!;
+                        pipWindow.document.head.appendChild(link);
+                    }
+                });
+
+                // Set title and navigate
+                pipWindow.document.title = "Pixora Focus";
+                pipWindow.location.href = '/pomodoro-popout';
+                return;
+            } catch (err) {
+                console.error("PIP failed, falling back to window.open", err);
+            }
+        }
+
+        // Fallback: Standard window.open
+        const w = 270;
+        const h = 330;
+        const left = (window.screen.width / 2) - (w / 2);
+        const top = (window.screen.height / 2) - (h / 2);
+        window.open('/pomodoro-popout', 'Pomodoro', `width=${w},height=${h},left=${left},top=${top},menubar=no,status=no,toolbar=no`);
     }
 
     const resetTimer = () => {
@@ -226,14 +318,31 @@ export default function PomodoroTimer() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <TimerIcon size={14} color="#ff4d4d" />
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#333' }}>POMODORO ACTIVO</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#333' }}>POMODORO</span>
                     </div>
-                    <button
-                        onClick={() => setIsExpanded(false)}
-                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ccc' }}
-                    >
-                        <ChevronDown size={14} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handlePopOut() }}
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
+                            title="Ventana independiente"
+                        >
+                            <ExternalLink size={14} />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsFloating(true) }}
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
+                            title="Flotar en dashboard"
+                        >
+                            <Maximize2 size={14} />
+                        </button>
+                        <button
+                            onClick={() => setIsExpanded(false)}
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#cbd5e1', padding: 2, marginLeft: 4 }}
+                            title="Contraer"
+                        >
+                            <ChevronDown size={14} />
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -274,53 +383,89 @@ export default function PomodoroTimer() {
                     }}
                 >
                     {!isCompact && (
-                        <div style={{ display: 'flex', gap: 4, flex: 1 }}>
+                        <div style={{ display: 'flex', gap: 2, flex: 1, minWidth: 0 }}>
                             {(Object.keys(MODES) as Mode[]).map(m => (
                                 <button
                                     key={m}
                                     onClick={() => changeMode(m)}
                                     style={{
                                         flex: 1,
-                                        padding: '6px 4px',
-                                        borderRadius: 8,
-                                        fontSize: 9,
+                                        padding: '4px 2px',
+                                        borderRadius: 6,
+                                        fontSize: 8,
                                         fontWeight: 700,
                                         textTransform: 'uppercase',
                                         border: 'none',
                                         cursor: 'pointer',
                                         background: mode === m ? MODES[m].bg : 'transparent',
                                         color: mode === m ? MODES[m].color : '#999',
-                                        transition: 'all 0.2s'
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden'
                                     }}
                                 >
-                                    <div style={{ fontSize: 8 }}>{MODES[m].label}</div>
+                                    {MODES[m].label.charAt(0)}
                                 </button>
                             ))}
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+                    <div style={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center', flexShrink: 0 }}>
+                        {/* Drag handle button (the "cross") */}
+                        <div
+                            style={{
+                                padding: '4px',
+                                color: isDragging ? '#4CAF50' : '#cbd5e1',
+                                cursor: 'grab',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 6,
+                                background: isDragging ? '#f0faf0' : 'transparent',
+                                transition: 'all 0.2s'
+                            }}
+                            title="Arrastrar pomodoro"
+                        >
+                            <Move size={14} />
+                        </div>
+
+                        {/* Independent window (External) */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); handlePopOut() }}
+                            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 6 }}
+                            className="hover:bg-gray-100"
+                            title="Abrir en ventana independiente (Siempre visible)"
+                        >
+                            <ExternalLink size={14} />
+                        </button>
+
+                        {/* Compact mode toggle */}
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsCompact(!isCompact) }}
-                            style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', padding: 4 }}
+                            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 6 }}
+                            className="hover:bg-gray-100"
+                            title={isCompact ? "Expandir" : "Contraer"}
                         >
-                            {isCompact ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
+                            {isCompact ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
                         </button>
+
+                        {/* Back to sidebar (Close floating) */}
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsFloating(false); setIsCompact(false); }}
                             style={{
-                                background: '#f0f0f0',
+                                background: '#fee2e2',
                                 border: 'none',
                                 borderRadius: 6,
-                                color: '#4CAF50',
+                                color: '#ef4444',
                                 cursor: 'pointer',
-                                padding: 4,
+                                padding: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                marginLeft: 4
                             }}
+                            title="Minimizar a la barra lateral"
                         >
-                            <Move size={12} />
+                            <X size={14} />
                         </button>
                     </div>
                 </div>

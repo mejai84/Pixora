@@ -188,7 +188,11 @@ export default function OperationsView() {
                         <Section title="PRODUCTOS ENCONTRADOS EN PLATAFORMAS">
                             <DiscoveryList
                                 items={foundProducts.platforms}
-                                onChange={items => setFoundProducts({ ...foundProducts, platforms: items })}
+                                onChange={items => {
+                                    const newFound = { ...foundProducts, platforms: items }
+                                    setFoundProducts(newFound)
+                                    syncOps({ found_products: newFound })
+                                }}
                                 placeholder="Ej: AliExpress..."
                             />
                         </Section>
@@ -196,7 +200,11 @@ export default function OperationsView() {
                         <Section title="PRODUCTOS EN ANUNCIOS ACTIVOS (COMPETITIVIDAD)">
                             <DiscoveryList
                                 items={foundProducts.activeAds}
-                                onChange={items => setFoundProducts({ ...foundProducts, activeAds: items })}
+                                onChange={items => {
+                                    const newFound = { ...foundProducts, activeAds: items }
+                                    setFoundProducts(newFound)
+                                    syncOps({ found_products: newFound })
+                                }}
                                 placeholder="Ej: FB Ads..."
                             />
                         </Section>

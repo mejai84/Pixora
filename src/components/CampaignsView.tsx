@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import {
     Calendar, Package, ShoppingBag, Truck, DollarSign, Target,
     Link as LinkIcon, CheckCircle2, MoreHorizontal, Plus, Trash2,
-    Search, Filter, Globe, MousePointer2, ExternalLink, X, Save, Activity
+    Search, Filter, Globe, MousePointer2, ExternalLink, X, Save, Activity, Edit3
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -36,6 +36,7 @@ export default function CampaignsView() {
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
     useEffect(() => {
         fetchCampaigns()
@@ -78,12 +79,11 @@ export default function CampaignsView() {
         }
     }
 
-    const activeRow = rows.find(r => r.id === selectedId) || null
+    const [editState, setEditState] = useState<CampaignRow | null>(null)
 
     const handleCreateNew = () => {
-        const tempId = 'new_' + Date.now()
         const newRow: CampaignRow = {
-            id: tempId,
+            id: 'new_' + Date.now(),
             date: new Date().toISOString().split('T')[0],
             store: '',
             developer: '',
@@ -102,54 +102,60 @@ export default function CampaignsView() {
             fanPage: '',
             landingLink: ''
         }
-        setRows([newRow, ...rows])
-        setSelectedId(tempId)
+        setEditState(newRow)
         setIsModalOpen(true)
     }
 
-    const updateRowLocal = (id: string, updates: Partial<CampaignRow>) => {
-        setRows(rows.map(r => r.id === id ? { ...r, ...updates } : r))
+    const handleEdit = (row: CampaignRow) => {
+        setEditState({ ...row })
+        setIsModalOpen(true)
+    }
+
+    const updateEditState = (updates: Partial<CampaignRow>) => {
+        if (editState) setEditState({ ...editState, ...updates })
     }
 
     const saveCampaign = async () => {
-        if (!activeRow) return
+        if (!editState) return
         setIsSaving(true)
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('No auth user')
 
+            const isNew = editState.id.startsWith('new_')
             const dbData = {
                 user_id: user.id,
-                campaign_id: activeRow.id.startsWith('new_') ? Math.random().toString(36).substr(2, 9) : undefined,
-                date: activeRow.date,
-                store: activeRow.store,
-                developer: activeRow.developer,
-                product_name: activeRow.productName,
-                process: activeRow.process,
-                category: activeRow.category,
-                variations: activeRow.variations,
-                tt_date: activeRow.ttDate,
-                fb_date: activeRow.fbDate,
-                supplier: activeRow.supplier,
-                platform_code: activeRow.platformCode,
-                supplier_cost: activeRow.supplierCost,
-                selling_price: activeRow.sellingPrice,
-                revised: activeRow.revised,
-                ad_account: activeRow.adAccount,
-                fan_page: activeRow.fanPage,
-                landing_link: activeRow.landingLink
+                campaign_id: isNew ? Math.random().toString(36).substr(2, 9) : undefined,
+                date: editState.date,
+                store: editState.store,
+                developer: editState.developer,
+                product_name: editState.productName,
+                process: editState.process,
+                category: editState.category,
+                variations: editState.variations,
+                tt_date: editState.ttDate,
+                fb_date: editState.fbDate,
+                supplier: editState.supplier,
+                platform_code: editState.platformCode,
+                supplier_cost: editState.supplierCost,
+                selling_price: editState.sellingPrice,
+                revised: editState.revised,
+                ad_account: editState.adAccount,
+                fan_page: editState.fanPage,
+                landing_link: editState.landingLink
             }
 
-            if (activeRow.id.startsWith('new_')) {
-                const { data, error } = await supabase.from('campaign_records').insert(dbData).select().single()
+            if (isNew) {
+                const { data, error } = await supabase.from('campaign_records').insert([dbData]).select().single()
                 if (error) throw error
-                setRows(rows.map(r => r.id === activeRow.id ? { ...activeRow, id: data.id } : r))
-                setSelectedId(data.id)
+                setRows(prev => [{ ...editState, id: data.id }, ...prev])
             } else {
-                const { error } = await supabase.from('campaign_records').update(dbData).eq('id', activeRow.id)
+                const { error } = await supabase.from('campaign_records').update(dbData).eq('id', editState.id)
                 if (error) throw error
+                setRows(prev => prev.map(r => r.id === editState.id ? { ...editState } : r))
             }
             setIsModalOpen(false)
+            setEditState(null)
         } catch (error: any) {
             alert('Error al guardar: ' + error.message)
         } finally {
@@ -157,16 +163,22 @@ export default function CampaignsView() {
         }
     }
 
-    const deleteRow = async (id: string) => {
-        if (!confirm('¿Eliminar este registro?')) return
+    const deleteRow = async () => {
+        if (!deleteConfirmId) return
         try {
-            if (!id.startsWith('new_')) {
-                await supabase.from('campaign_records').delete().eq('id', id)
+            if (!deleteConfirmId.startsWith('new_')) {
+                const { error } = await supabase.from('campaign_records').delete().eq('id', deleteConfirmId)
+                if (error) throw error
             }
-            setRows(rows.filter(r => r.id !== id))
-            setIsModalOpen(false)
-        } catch (error) {
+            setRows(prev => prev.filter(r => r.id !== deleteConfirmId))
+            if (selectedId === deleteConfirmId) {
+                setIsModalOpen(false)
+                setSelectedId(null)
+            }
+            setDeleteConfirmId(null)
+        } catch (error: any) {
             console.error('Error deleting:', error)
+            alert('Error al eliminar: ' + error.message)
         }
     }
 
@@ -224,6 +236,7 @@ export default function CampaignsView() {
                                     <th style={thStyle}>Costo Prov.</th>
                                     <th style={thStyle}>P. Venta</th>
                                     <th style={{ ...thStyle, color: '#e74c3c' }}>CPA B.E.</th>
+                                    <th style={thStyle}>Rentabilidad</th>
                                     <th style={thStyle}>Status</th>
                                     <th style={{ ...thStyle, width: 80 }}></th>
                                 </tr>
@@ -250,12 +263,35 @@ export default function CampaignsView() {
                                                 <td style={tdStyle}>${r.sellingPrice.toLocaleString()}</td>
                                                 <td style={{ ...tdStyle, fontWeight: 900, color: '#e74c3c' }}>${cpaBE.toLocaleString()}</td>
                                                 <td style={tdStyle}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        {(() => {
+                                                            const cpaBE = r.sellingPrice - r.supplierCost;
+                                                            // Mock logic: if CPA BE is high, it's green. In real world, we'd compare with Marketing Spend table.
+                                                            const status = cpaBE > 25000 ? 'green' : cpaBE > 10000 ? 'yellow' : 'red';
+                                                            const colors = { green: '#22c55e', yellow: '#f59e0b', red: '#ef4444' };
+                                                            const labels = { green: 'Rentable', yellow: 'Break-even', red: 'Riesgo' };
+                                                            return (
+                                                                <>
+                                                                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors[status] }} />
+                                                                    <span style={{ fontSize: 10, fontWeight: 800, color: colors[status] }}>{labels[status]}</span>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </td>
+                                                <td style={tdStyle}>
                                                     {r.revised ? <CheckCircle2 size={18} color="#4CAF50" /> : <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid #e2e8f0' }} />}
                                                 </td>
                                                 <td style={tdStyle}>
                                                     <div style={{ display: 'flex', gap: 8 }}>
-                                                        <button onClick={() => { setSelectedId(r.id); setIsModalOpen(true); }} style={actionBtn}><Edit3 size={14} /></button>
-                                                        <button onClick={() => deleteRow(r.id)} style={{ ...actionBtn, color: '#ef4444' }}><Trash2 size={14} /></button>
+                                                        <button onClick={() => handleEdit(r)} style={actionBtn}><Edit3 size={14} /></button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(r.id); }}
+                                                            style={{ ...actionBtn, color: '#ef4444' }}
+                                                            title="Eliminar campaña"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -268,7 +304,7 @@ export default function CampaignsView() {
                 </div>
 
                 {/* FLOATING MODAL - CAMPAIGN EDITOR */}
-                {isModalOpen && activeRow && (
+                {isModalOpen && editState && (
                     <div style={{
                         position: 'fixed', inset: 0, zIndex: 9999,
                         background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(8px)',
@@ -286,7 +322,7 @@ export default function CampaignsView() {
                                         <Target color="white" size={20} />
                                     </div>
                                     <div>
-                                        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>Lanzamiento: {activeRow.productName || 'Nuevo'}</h2>
+                                        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>Lanzamiento: {editState.productName || 'Nuevo'}</h2>
                                         <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>CONFIGURACIÓN DE CAMPAÑA</span>
                                     </div>
                                 </div>
@@ -303,7 +339,7 @@ export default function CampaignsView() {
                                         {isSaving ? <Activity size={16} className="animate-spin" /> : <Save size={16} />}
                                         GUARDAR CAMPAÑA
                                     </button>
-                                    <button onClick={() => setIsModalOpen(false)} style={{ background: '#f8fafc', border: 'none', borderRadius: 12, padding: 10, cursor: 'pointer' }}><X size={20} /></button>
+                                    <button onClick={() => { setIsModalOpen(false); setEditState(null); }} style={{ background: '#f8fafc', border: 'none', borderRadius: 12, padding: 10, cursor: 'pointer' }}><X size={20} /></button>
                                 </div>
                             </div>
 
@@ -314,41 +350,41 @@ export default function CampaignsView() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                                         <h3 style={sectionTitle}>Información del Producto</h3>
                                         <Field label="Nombre del Producto">
-                                            <input value={activeRow.productName} onChange={e => updateRowLocal(activeRow.id, { productName: e.target.value })} style={modalInput} placeholder="Ej: Peluche Viral..." />
+                                            <input value={editState.productName} onChange={e => updateEditState({ productName: e.target.value })} style={modalInput} placeholder="Ej: Peluche Viral..." />
                                         </Field>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <Field label="Tienda">
-                                                <input value={activeRow.store} onChange={e => updateRowLocal(activeRow.id, { store: e.target.value })} style={modalInput} placeholder="Nombre tienda" />
+                                                <input value={editState.store} onChange={e => updateEditState({ store: e.target.value })} style={modalInput} placeholder="Nombre tienda" />
                                             </Field>
                                             <Field label="ID Desarrollador">
-                                                <input value={activeRow.developer} onChange={e => updateRowLocal(activeRow.id, { developer: e.target.value })} style={modalInput} placeholder="Tu nombre" />
+                                                <input value={editState.developer} onChange={e => updateEditState({ developer: e.target.value })} style={modalInput} placeholder="Tu nombre" />
                                             </Field>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <Field label="Proceso">
-                                                <select value={activeRow.process} onChange={e => updateRowLocal(activeRow.id, { process: e.target.value })} style={modalInput}>
+                                                <select value={editState.process} onChange={e => updateEditState({ process: e.target.value })} style={modalInput}>
                                                     <option>Producto nuevo</option>
                                                     <option>Migracion</option>
                                                     <option>Relanzamiento</option>
                                                 </select>
                                             </Field>
                                             <Field label="Categoría">
-                                                <input value={activeRow.category} onChange={e => updateRowLocal(activeRow.id, { category: e.target.value })} style={modalInput} />
+                                                <input value={editState.category} onChange={e => updateEditState({ category: e.target.value })} style={modalInput} />
                                             </Field>
                                         </div>
 
                                         <h3 style={{ ...sectionTitle, marginTop: 16 }}>Costos y Finanzas</h3>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <Field label="Costo Proveedor ($)">
-                                                <input type="number" value={activeRow.supplierCost} onChange={e => updateRowLocal(activeRow.id, { supplierCost: Number(e.target.value) })} style={modalInput} />
+                                                <input type="number" value={editState.supplierCost} onChange={e => updateEditState({ supplierCost: Number(e.target.value) })} style={modalInput} />
                                             </Field>
                                             <Field label="Precio Venta ($)">
-                                                <input type="number" value={activeRow.sellingPrice} onChange={e => updateRowLocal(activeRow.id, { sellingPrice: Number(e.target.value) })} style={modalInput} />
+                                                <input type="number" value={editState.sellingPrice} onChange={e => updateEditState({ sellingPrice: Number(e.target.value) })} style={modalInput} />
                                             </Field>
                                         </div>
                                         <div style={{ padding: 16, background: '#fef2f2', borderRadius: 16, border: '1px solid #fee2e2' }}>
                                             <div style={{ fontSize: 10, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase' }}>Breakeven Esperado</div>
-                                            <div style={{ fontSize: 24, fontWeight: 900, color: '#b91c1c' }}>${(activeRow.sellingPrice - activeRow.supplierCost).toLocaleString()}</div>
+                                            <div style={{ fontSize: 24, fontWeight: 900, color: '#b91c1c' }}>${(editState.sellingPrice - editState.supplierCost).toLocaleString()}</div>
                                         </div>
                                     </div>
 
@@ -356,28 +392,28 @@ export default function CampaignsView() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                                         <h3 style={sectionTitle}>Logística de Ads</h3>
                                         <Field label="Proveedor / Plataforma">
-                                            <input value={activeRow.supplier} onChange={e => updateRowLocal(activeRow.id, { supplier: e.target.value })} style={modalInput} placeholder="Ej: Dropi..." />
+                                            <input value={editState.supplier} onChange={e => updateEditState({ supplier: e.target.value })} style={modalInput} placeholder="Ej: Dropi..." />
                                         </Field>
                                         <Field label="Link de Landing Page">
-                                            <input value={activeRow.landingLink} onChange={e => updateRowLocal(activeRow.id, { landingLink: e.target.value })} style={modalInput} placeholder="https://..." />
+                                            <input value={editState.landingLink} onChange={e => updateEditState({ landingLink: e.target.value })} style={modalInput} placeholder="https://..." />
                                         </Field>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <Field label="Fecha Lanz. TT">
-                                                <input type="date" value={activeRow.ttDate} onChange={e => updateRowLocal(activeRow.id, { ttDate: e.target.value })} style={modalInput} />
+                                                <input type="date" value={editState.ttDate} onChange={e => updateEditState({ ttDate: e.target.value })} style={modalInput} />
                                             </Field>
                                             <Field label="Fecha Lanz. FB">
-                                                <input type="date" value={activeRow.fbDate} onChange={e => updateRowLocal(activeRow.id, { fbDate: e.target.value })} style={modalInput} />
+                                                <input type="date" value={editState.fbDate} onChange={e => updateEditState({ fbDate: e.target.value })} style={modalInput} />
                                             </Field>
                                         </div>
 
                                         <Field label="Cuenta Publicitaria / FanPage">
-                                            <input value={activeRow.adAccount} onChange={e => updateRowLocal(activeRow.id, { adAccount: e.target.value })} style={modalInput} placeholder="Nombre de cuenta..." />
+                                            <input value={editState.adAccount} onChange={e => updateEditState({ adAccount: e.target.value })} style={modalInput} placeholder="Nombre de cuenta..." />
                                         </Field>
 
-                                        <div onClick={() => updateRowLocal(activeRow.id, { revised: !activeRow.revised })} style={{ marginTop: 20, padding: 16, borderRadius: 16, border: '1.5px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: activeRow.revised ? '#f0faf0' : 'white' }}>
-                                            {activeRow.revised ? <CheckCircle2 size={24} color="#4CAF50" /> : <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid #e2e8f0' }} />}
-                                            <span style={{ fontWeight: 800, color: activeRow.revised ? '#4CAF50' : '#64748b' }}>MARCAR COMO REVISADO</span>
+                                        <div onClick={() => updateEditState({ revised: !editState.revised })} style={{ marginTop: 20, padding: 16, borderRadius: 16, border: '1.5px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: editState.revised ? '#f0faf0' : 'white' }}>
+                                            {editState.revised ? <CheckCircle2 size={24} color="#4CAF50" /> : <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid #e2e8f0' }} />}
+                                            <span style={{ fontWeight: 800, color: editState.revised ? '#4CAF50' : '#64748b' }}>MARCAR COMO REVISADO</span>
                                         </div>
                                     </div>
 
@@ -388,9 +424,56 @@ export default function CampaignsView() {
                 )}
             </div>
 
+            {/* Premium Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 10000,
+                    background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+                }}>
+                    <div style={{
+                        width: '100%', maxWidth: 400, background: 'white',
+                        borderRadius: 24, padding: 32, boxShadow: '0 40px 100px rgba(0,0,0,0.4)',
+                        textAlign: 'center', animation: 'slideUp 0.2s ease'
+                    }}>
+                        <div style={{
+                            width: 60, height: 60, borderRadius: 20, background: '#fee2e2',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 20px', color: '#ef4444'
+                        }}>
+                            <Trash2 size={28} />
+                        </div>
+                        <h3 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e', marginBottom: 12 }}>¿Eliminar Campaña?</h3>
+                        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 32, lineHeight: 1.6 }}>
+                            Esta acción es permanente y no se podrá recuperar la información de esta campaña.
+                        </p>
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button
+                                onClick={() => setDeleteConfirmId(null)}
+                                style={{
+                                    flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid #f1f5f9',
+                                    background: 'white', color: '#64748b', fontWeight: 800, cursor: 'pointer'
+                                }}
+                            >
+                                CANCELAR
+                            </button>
+                            <button
+                                onClick={deleteRow}
+                                style={{
+                                    flex: 1, padding: '12px', borderRadius: 12, border: 'none',
+                                    background: '#ef4444', color: 'white', fontWeight: 800, cursor: 'pointer'
+                                }}
+                            >
+                                SÍ, ELIMINAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
                 @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(40px); }
+                    from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
                 .table-row:hover { background: #fcfdfe; }
@@ -413,9 +496,3 @@ function Field({ label, children, style }: any) {
         </div>
     )
 }
-
-const Edit3 = ({ size, color }: any) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-    </svg>
-)

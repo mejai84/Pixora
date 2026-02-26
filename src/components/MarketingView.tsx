@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import {
     Target, TrendingUp, BarChart3,
     Calendar, Filter, Plus, Trash2,
     Search, Globe, Share2, MoreHorizontal,
     TrendingDown, MousePointer2, AlertCircle,
     BrainCircuit, Rocket, Image as ImageIcon,
-    Zap, ArrowUpRight, ArrowDownRight, Info
+    Zap, ArrowUpRight, ArrowDownRight, Info, Edit3, FileSpreadsheet
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -48,13 +49,92 @@ export default function MarketingView() {
     const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-    // Simulator State
+    const [isWarMode, setIsWarMode] = useState(false)
+    const [lastSync, setLastSync] = useState<string>(new Date().toLocaleTimeString())
     const [simCpa, setSimCpa] = useState<number>(5)
     const [simBudget, setSimBudget] = useState<number>(100)
+    const fileRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         fetchData()
-    }, [])
+        let interval: any
+        if (isWarMode) {
+            interval = setInterval(() => {
+                fetchData()
+                setLastSync(new Date().toLocaleTimeString())
+            }, 15000) // Refresh every 15s in War Mode
+        }
+        return () => clearInterval(interval)
+    }, [isWarMode])
+
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setIsLoading(true)
+        const reader = new FileReader()
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result
+                const wb = XLSX.read(bstr, { type: 'binary' })
+                const wsname = wb.SheetNames[0]
+                const ws = wb.Sheets[wsname]
+                const data = XLSX.utils.sheet_to_json(ws)
+                await processMarketingReport(data)
+            } catch (err: any) {
+                alert('Error al leer el reporte: ' + err.message)
+            } finally {
+                setIsLoading(false)
+                if (fileRef.current) fileRef.current.value = ''
+            }
+        }
+        reader.readAsBinaryString(file)
+    }
+
+    const processMarketingReport = async (data: any[]) => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { alert('Debes iniciar sesión'); return }
+
+        const gv = (row: any, keys: string[], def: any = '') => {
+            const k = Object.keys(row).find(k => keys.some(pk => k.toLowerCase().includes(pk.toLowerCase())))
+            return k !== undefined ? row[k] : def
+        }
+
+        const newRecords = data.map(row => {
+            const spend = Number(gv(row, ['gasto', 'spend', 'amount spent', 'valor'], 0))
+            const impressions = Number(gv(row, ['impresiones', 'impressions'], 0))
+            const clicks = Number(gv(row, ['clics', 'clicks', 'link clicks'], 0))
+            const conversions = Number(gv(row, ['conversiones', 'conversions', 'results', 'resultados'], 0))
+
+            return {
+                user_id: user.id,
+                date: gv(row, ['fecha', 'date', 'day'], new Date().toISOString().split('T')[0]),
+                platform: gv(row, ['platform', 'plataforma', 'source'], 'Meta'),
+                campaign_name: gv(row, ['campaign', 'campaña', 'nombre de la campaña'], 'Importado'),
+                ad_account: gv(row, ['cuenta', 'account'], ''),
+                spend,
+                impressions,
+                clicks,
+                conversions,
+                ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
+                cpc: clicks > 0 ? spend / clicks : 0,
+                cpa: conversions > 0 ? spend / conversions : 0,
+                status: 'active'
+            }
+        }).filter(r => r.spend > 0 || r.impressions > 0)
+
+        if (newRecords.length === 0) {
+            alert('No se encontraron datos válidos en el archivo.')
+            return
+        }
+
+        const { error } = await supabase.from('marketing_spend').insert(newRecords)
+        if (error) {
+            alert('Error al guardar reporte: ' + error.message)
+        } else {
+            alert(`¡Éxito! Se importaron ${newRecords.length} registros.`)
+            fetchData()
+        }
+    }
 
     const fetchData = async () => {
         setIsLoading(true)
@@ -250,6 +330,25 @@ export default function MarketingView() {
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.2s ease', padding: '24px' }}>
+            <style jsx>{`
+                @keyframes pulse-red {
+                    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+                    70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+                }
+                .war-mode-active {
+                    animation: pulse-red 2s infinite;
+                    border: 1px solid #e74c3c !important;
+                }
+                @keyframes bounce-small {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-3px); }
+                }
+                .animate-bounce-small {
+                    animation: bounce-small 1s infinite;
+                }
+            `}</style>
+            <input type="file" ref={fileRef} onChange={handleFile} accept=".csv,.xlsx,.xls" style={{ display: 'none', visibility: 'hidden' }} />
 
             {/* Header */}
             <div className="marketing-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 20 }}>
@@ -263,6 +362,12 @@ export default function MarketingView() {
                     <p style={{ color: '#999', fontSize: 12, marginTop: 4, fontWeight: 500 }}>Optimización de presupuesto y ROAS real</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    {isWarMode && (
+                        <div style={{ fontSize: 10, color: '#e74c3c', fontWeight: 900, background: '#fef2f2', padding: '4px 10px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e74c3c', animation: 'pulse 1s infinite' }} />
+                            SINCRONIZADO: {lastSync}
+                        </div>
+                    )}
                     <button onClick={addRecord} className="btn-primary" style={{ height: 40, borderRadius: 10, padding: '0 16px', fontSize: 12 }}>
                         <Plus size={16} /> {isAdding ? 'Creando...' : 'Agregar Gasto'}
                     </button>
@@ -324,6 +429,7 @@ export default function MarketingView() {
             {/* Main Content: Charts */}
             <div className="responsive-grid grid-cols-2-1" style={{ gap: 24, marginBottom: 32 }}>
                 <div className="card" style={{ padding: 'clamp(16px, 4vw, 24px)', minHeight: 400 }}>
+                    <input type="file" ref={fileRef} onChange={handleFile} accept=".csv,.xlsx,.xls" style={{ display: 'none' }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                         <h3 style={{ fontSize: 14, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 8 }}>
                             <TrendingUp size={16} color="#3498db" /> Rendimiento & ROAS Real
@@ -391,14 +497,42 @@ export default function MarketingView() {
 
             {/* Table Section */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbfc' }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbfc', flexWrap: 'wrap', gap: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#1a1a2e' }}>LIBRERÍA DE CREATIVOS & RENDIMIENTO</span>
                         <div style={{ background: '#fef2f2', color: '#ef4444', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <AlertCircle size={10} /> Alertas de CPA Breakeven Activadas
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <button
+                            onClick={() => fileRef.current?.click()}
+                            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                            <FileSpreadsheet size={14} color="#10b981" /> IMPORTAR REPORTE ADS
+                        </button>
+                        <button
+                            onClick={() => setIsWarMode(!isWarMode)}
+                            className={isWarMode ? 'war-mode-active' : ''}
+                            style={{
+                                background: isWarMode ? '#e74c3c' : '#1a1a2e',
+                                color: isWarMode ? '#fff' : '#f1c40f',
+                                border: 'none',
+                                padding: '8px 20px',
+                                borderRadius: 12,
+                                fontSize: 11,
+                                fontWeight: 900,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
+                            <Rocket size={14} className={isWarMode ? 'animate-bounce-small' : ''} />
+                            {isWarMode ? 'MISIÓN EN CURSO' : 'MODO GUERRA'}
+                        </button>
+                        <div style={{ width: 1, height: 24, background: '#e2e8f0' }} />
                         <div style={{ position: 'relative' }}>
                             <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                             <input placeholder="Filtrar por nombre..." style={{ padding: '6px 12px 6px 32px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12, outline: 'none', width: 220 }} />

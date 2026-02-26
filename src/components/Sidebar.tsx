@@ -184,8 +184,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
         { id: 'productivity', label: 'Productividad AI', icon: Activity },
         { id: 'operations', label: 'Operaciones', icon: Check },
         { id: 'logistics', label: 'Logística', icon: Truck },
-        { id: 'banners', label: 'Banner Studio', icon: ImageIcon },
-        { id: 'landings', label: 'Landing Factory', icon: Layout },
+        { id: 'creative_studio', label: 'Creative Studio', icon: ImageIcon },
         { id: 'settings', label: 'Ajustes', icon: Settings },
     ]
 
@@ -392,14 +391,6 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
             {/* Bottom section */}
 
             <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                    onClick={onNewAnalysis}
-                    className="sidebar-bottom-btn"
-                    style={{ background: '#4CAF50' }}
-                >
-                    <Plus size={14} />
-                    Analizar Nuevo
-                </button>
                 <button
                     onClick={handleLogout}
                     className="sidebar-bottom-btn"

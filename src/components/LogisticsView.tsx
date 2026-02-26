@@ -26,7 +26,7 @@ interface LogisticsStats {
 
 interface SavedReport { id: string; date: string; name: string; stats: LogisticsStats; rawData: OrderData[] }
 
-const ORANGE = '#e67e22'
+const PRIMARY = '#22c55e'
 const th: React.CSSProperties = { padding: '12px 16px', fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase', textAlign: 'left', background: '#f9f9f9', borderBottom: '1px solid #eee' }
 const td: React.CSSProperties = { padding: '12px 16px', fontSize: 12, color: '#333', borderBottom: '1px solid #f5f5f5' }
 
@@ -137,20 +137,8 @@ export default function LogisticsView() {
             novedadVal: sum(novedad, o => o.valor_recaudo),
             oficinaVal: sum(oficina, o => o.valor_recaudo),
         }
-        setRawData(orders); setStats(s); setFileName(name)
+        setRawData(orders); setStats(s); setFileName(name); setSubView('dashboard')
 
-        const save = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser()
-                if (!user) return
-                const { data: ins, error } = await supabase.from('logistics_reports').insert({ user_id: user.id, report_date: new Date().toLocaleString(), name, stats: s, raw_data: orders }).select()
-                if (error) throw error
-                if (ins?.[0]) setHistory(prev => [{ id: ins[0].id, date: ins[0].report_date, name: ins[0].name, stats: ins[0].stats, rawData: ins[0].raw_data }, ...prev].slice(0, 15))
-                showToast(`✅ ${orders.length} pedidos procesados y guardados`)
-            } catch (e: any) { showToast('❌ Error guardando: ' + e.message, false) }
-        }
-        save()
-        setSubView('dashboard')
     }
 
     const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,6 +154,31 @@ export default function LogisticsView() {
             finally { setIsLoading(false); e.target.value = '' }
         }
         reader.readAsBinaryString(file)
+    }
+
+    const handleSaveReport = async () => {
+        if (!stats || !rawData) return
+        setIsLoading(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error('Inicia sesión para guardar')
+            const { data, error } = await supabase.from('logistics_reports').insert({
+                user_id: user.id,
+                report_date: new Date().toLocaleString(),
+                name: fileName,
+                stats: stats,
+                raw_data: rawData
+            }).select()
+            if (error) throw error
+            if (data?.[0]) {
+                setHistory(prev => [{ id: data[0].id, date: data[0].report_date, name: data[0].name, stats: data[0].stats, rawData: data[0].raw_data }, ...prev].slice(0, 15))
+            }
+            showToast('✅ Reporte guardado exitosamente')
+        } catch (e: any) {
+            showToast('❌ Error: ' + e.message, false)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const openDetail = (title: string) => { setDetailTitle(title); setDetailFilter('all'); setDetailOpen(true) }
@@ -203,7 +216,7 @@ export default function LogisticsView() {
             {isLoading ? <LoadingSpinner /> :
                 subView === 'menu' ? <Menu onUpload={() => fileRef.current?.click()} onHistory={() => setSubView('history')} /> :
                     subView === 'history' ? <HistoryView history={history} onBack={() => setSubView('menu')} onSelect={(r: SavedReport) => { setStats(r.stats); setRawData(r.rawData); setFileName(r.name); setSubView('dashboard') }} onDelete={async (id: string) => { await supabase.from('logistics_reports').delete().eq('id', id); setHistory(p => p.filter(h => h.id !== id)) }} /> :
-                        stats ? <Dashboard stats={stats} rawData={rawData} fileName={fileName} adSpend={adSpend} setAdSpend={setAdSpend} productPauta={productPauta} setProductPauta={setProductPauta} onBack={() => setSubView('menu')} onUpload={() => fileRef.current?.click()} onModal={setModalType} onDetail={openDetail} onCarrier={setCarrierDetail} /> : null
+                        stats ? <Dashboard stats={stats} rawData={rawData} fileName={fileName} adSpend={adSpend} setAdSpend={setAdSpend} productPauta={productPauta} setProductPauta={setProductPauta} onBack={() => setSubView('menu')} onUpload={() => fileRef.current?.click()} onModal={setModalType} onDetail={openDetail} onCarrier={setCarrierDetail} onSave={handleSaveReport} /> : null
             }
             {modalType && <EfficiencyModal type={modalType} data={rawData} onClose={() => setModalType(null)} />}
             {detailOpen && <DetailModal title={detailTitle} data={getDetailData()} filter={detailFilter} setFilter={setDetailFilter} onClose={() => setDetailOpen(false)} />}
@@ -215,40 +228,86 @@ export default function LogisticsView() {
 // ─── MENU ───────────────────────────────────────────────────────────
 function Menu({ onUpload, onHistory }: any) {
     return (
-        <div style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, background: `${ORANGE}20`, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                <Truck size={32} color={ORANGE} />
+        <div style={{ padding: '60px 24px', maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'white', padding: '8px 20px', borderRadius: 100, boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: 24 }}>
+                <div style={{ width: 8, height: 8, background: PRIMARY, borderRadius: '50%' }}></div>
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#1a1a2e', letterSpacing: '0.05em' }}>CENTRO DE OPERACIONES</span>
             </div>
-            <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1a1a2e', marginBottom: 8 }}>Auditor Logístico</h1>
-            <p style={{ color: '#999', fontSize: 14, marginBottom: 48 }}>Analiza tus reportes de Dropi e identifica oportunidades para reducir devoluciones</p>
-            <div className="responsive-grid" style={{ gap: 24 }}>
-                {[
-                    { title: 'Subir Reporte', desc: 'Carga tu Excel de Dropi', icon: <Upload color={ORANGE} size={28} />, action: onUpload, color: ORANGE },
-                    { title: 'Diario de Pauta', desc: 'Próximamente', icon: <Calendar color="#5b21b6" size={28} />, action: null, color: '#5b21b6' },
-                    { title: 'Ver Historial', desc: 'Reportes guardados', icon: <Clock color="#3498db" size={28} />, action: onHistory, color: '#3498db' },
-                ].map(c => (
-                    <div key={c.title} onClick={c.action || undefined} className="card shadow-hover" style={{ padding: 32, cursor: c.action ? 'pointer' : 'default', opacity: c.action ? 1 : 0.5 }}>
-                        <div style={{ width: 56, height: 56, background: `${c.color}15`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>{c.icon}</div>
-                        <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e' }}>{c.title}</h3>
-                        <p style={{ fontSize: 12, color: '#999', marginTop: 6 }}>{c.desc}</p>
+
+            <h1 style={{ fontSize: 42, fontWeight: 950, color: '#1a1a2e', marginBottom: 16, letterSpacing: '-0.03em' }}>
+                Auditor <span style={{ color: PRIMARY }}>Logístico</span>
+            </h1>
+            <p style={{ color: '#64748b', fontSize: 16, marginBottom: 50, maxWidth: 600, margin: '0 auto 50px', lineHeight: 1.6 }}>
+                La herramienta estratégica para controlar tus finanzas reales, <br />
+                reducir devoluciones y auditar tus transportadoras.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                <div
+                    onClick={onUpload}
+                    className="card shadow-hover"
+                    style={{ padding: '40px 32px', cursor: 'pointer', textAlign: 'left', border: '1px solid #f1f5f9', borderRadius: 28, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                >
+                    <div style={{ width: 64, height: 64, background: `${PRIMARY}10`, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                        <Upload color={PRIMARY} size={32} />
                     </div>
-                ))}
+                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#1a1a2e', marginBottom: 12 }}>Subir Nuevo Reporte</h3>
+                    <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
+                        Carga tu archivo Excel o CSV de Dropi para analizar utilidades, fletes y estados de entrega.
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: PRIMARY, fontWeight: 900, fontSize: 13 }}>
+                        COMENZAR ANÁLISIS <ChevronRight size={16} />
+                    </div>
+                </div>
+
+                <div
+                    onClick={onHistory}
+                    className="card shadow-hover"
+                    style={{ padding: '40px 32px', cursor: 'pointer', textAlign: 'left', border: '1px solid #f1f5f9', borderRadius: 28 }}
+                >
+                    <div style={{ width: 64, height: 64, background: '#3b82f610', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                        <History color="#3b82f6" size={32} />
+                    </div>
+                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#1a1a2e', marginBottom: 12 }}>Consultar Historial</h3>
+                    <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
+                        Revisa tus reportes guardados anteriormente y compara el rendimiento de tus campañas.
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#3b82f6', fontWeight: 900, fontSize: 13 }}>
+                        VER REPORTES <ChevronRight size={16} />
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ marginTop: 60, padding: '24px', background: '#f8fafc', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 10, height: 10, background: '#22c55e', borderRadius: '50%' }}></div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Procesador Dropi v2.0</span>
+                </div>
+                <div style={{ width: 1, height: 20, background: '#cbd5e1' }}></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <FileText size={16} color="#64748b" />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Formatos soportados: .xlsx, .csv</span>
+                </div>
             </div>
         </div>
     )
 }
 
 // ─── DASHBOARD ──────────────────────────────────────────────────────
-function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta, setProductPauta, onBack, onUpload, onModal, onDetail, onCarrier }: any) {
+function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta, setProductPauta, onBack, onUpload, onModal, onDetail, onCarrier, onSave }: any) {
     const s: LogisticsStats = stats
     const guias = s.guiasGeneradas || 1
-    const confRate = ((s.guiasGeneradas / (s.totalOrders || 1)) * 100).toFixed(1)
-    const cancelRate = ((s.cancelados / (s.totalOrders || 1)) * 100).toFixed(1)
+    const totalPedidos = s.totalOrders || 1
+    const confRate = ((s.guiasGeneradas / totalPedidos) * 100).toFixed(1)
+    const cancelRate = ((s.cancelados / totalPedidos) * 100).toFixed(1)
     const delivRate = ((s.entregados / guias) * 100).toFixed(1)
     const transitRate = ((s.enTransito / guias) * 100).toFixed(1)
     const retRate = ((s.devoluciones / guias) * 100).toFixed(1)
-    const netProfit = s.ventasBrutas - s.costoProveedor - s.fletesEntregados - s.fletesDevolucion - adSpend
-    const projectionRates = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
+
+    // Exact LogisKei Net Profit calculation: (Ventas + Anticipado) - (Costo Prov + Flete Ent + Flete Dev + Ads)
+    const totalRevenue = s.ventasBrutas + s.pagoAnticipado
+    const totalCosts = s.costoProveedor + s.fletesEntregados + s.fletesDevolucion + adSpend
+    const netProfit = totalRevenue - totalCosts
 
     // Group by transportadora
     const byCarrier: Record<string, { sent: number; transit: number; dev: number; cancel: number; rechazado: number; entregado: number }> = {}
@@ -264,176 +323,220 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
         if (c.entregado) byCarrier[t].entregado++
     })
 
-    const statusCards1 = [
-        { label: 'Pend. Confirmación', count: s.pendienteConf, val: s.pendienteConfVal, color: '#f39c12', detail: 'Pendiente Confirmación' },
-        { label: 'Pendiente Envío', count: s.pendienteEnvio, val: 0, color: '#8e44ad', detail: 'Pendiente Envío' },
-        { label: 'En Novedad', count: s.enNovedad, val: s.novedadVal, color: '#e74c3c', detail: 'En Novedad' },
-        { label: 'Reclamar en Oficina', count: s.reclamarOficina, val: s.oficinaVal, color: '#c0392b', detail: 'Reclamar Oficina' },
-        { label: 'Tránsito Total', count: s.enTransito, val: s.transitoTotalVal, color: '#3498db', detail: 'En Tránsito' },
+    const statusGrid1 = [
+        { label: 'Pend. Confirmación', count: s.pendienteConf, val: s.pendienteConfVal, color: '#f39c12' },
+        { label: 'Pendiente Envío', count: s.pendienteEnvio, val: 0, color: '#8e44ad' },
+        { label: 'En Novedad', count: s.enNovedad, val: s.novedadVal, color: PRIMARY },
+        { label: 'Reclamar en Oficina', count: s.reclamarOficina, val: s.oficinaVal, color: '#8e44ad' },
+        { label: 'Tránsito Total', count: s.enTransito, val: s.transitoTotalVal, color: '#2980b9' },
     ]
-    const statusCards2 = [
-        { label: 'Entregados', count: s.entregados, val: s.entregadosVal, color: '#27ae60', detail: 'Entregados' },
-        { label: 'Devoluciones', count: s.devoluciones, val: s.devolucionesVal, color: '#e74c3c', detail: 'Devoluciones' },
-        { label: 'Cancelados', count: s.cancelados, val: s.canceladosVal, color: '#95a5a6', detail: 'Cancelados' },
-        { label: 'Rechazados', count: s.rechazados, val: s.rechazadosVal, color: '#e74c3c', detail: 'Rechazados' },
+
+    const statusGrid2 = [
+        { label: 'Entregados', count: s.entregados, val: s.entregadosVal, color: '#27ae60' },
+        { label: 'Devoluciones', count: s.devoluciones, val: s.devolucionesVal, color: '#c0392b' },
+        { label: 'Cancelados', count: s.cancelados, val: s.canceladosVal, color: '#7f8c8d' },
+        { label: 'Rechazados', count: s.rechazados, val: s.rechazadosVal, color: '#c0392b' },
     ]
 
     return (
         <div style={{ padding: '24px 32px 60px' }}>
             {/* Toolbar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <button onClick={onBack} style={{ width: 38, height: 38, background: '#f5f5f5', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <button onClick={onBack} style={{ width: 42, height: 42, background: 'white', border: '1px solid #eee', borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}><X size={18} /></button>
                     <div>
-                        <h1 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>Análisis Logístico</h1>
-                        <div style={{ fontSize: 10, color: '#999', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                            <FileText size={11} />{fileName.slice(0, 30)}{fileName.length > 30 ? '...' : ''}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <h1 style={{ fontSize: 20, fontWeight: 950, color: '#1a1a2e' }}>Auditor Logístico</h1>
+                            <span style={{ fontSize: 10, background: '#eef2ff', color: '#6366f1', padding: '2px 8px', borderRadius: 20, fontWeight: 800 }}>ESTRATÉGICO</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                            <FileText size={12} /> Analizando: <b>{fileName}</b>
                         </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={onUpload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: ORANGE, color: 'white', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>
-                        <Upload size={14} /> Nuevo
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={onUpload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: PRIMARY, color: 'white', border: 'none', borderRadius: 16, fontWeight: 850, fontSize: 12, cursor: 'pointer', boxShadow: `0 10px 20px ${PRIMARY}30` }}>
+                        <Upload size={16} /> Subir Nuevo Excel
                     </button>
-                    <button onClick={onBack} className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'white', border: '1px solid #eee', borderRadius: 12, fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>
-                        <History size={14} /> Historial
+                    <button onClick={onSave} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: 'white', color: '#1a1a2e', border: '1px solid #1a1a2e', borderRadius: 16, fontWeight: 850, fontSize: 12, cursor: 'pointer' }}>
+                        <Save size={16} /> Guardar Reporte
                     </button>
                 </div>
             </div>
 
-            {/* KPI Row */}
-            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+            {/* Top KPI Cards (LogisKei Style) */}
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 32 }}>
                 {[
-                    { label: 'Total Pedidos', val: s.totalOrders, icon: <Package size={16} />, color: '#1a1a2e' },
-                    { label: 'Total Guías', val: s.guiasGeneradas, icon: <FileText size={16} />, color: '#3498db' },
-                    { label: '% Confirmación', val: `${confRate}%`, icon: <CheckCircle2 size={16} />, color: '#27ae60', bg: '#f0faf0' },
-                    { label: '% Cancelación', val: `${cancelRate}%`, icon: <XCircle size={16} />, color: '#e74c3c', bg: '#fff5f5' },
+                    { label: 'Total Pedidos', val: s.totalOrders, icon: <Package size={20} />, color: '#1a1a2e', bg: 'white' },
+                    { label: 'Total Guías', val: s.guiasGeneradas, icon: <Truck size={20} />, color: '#3b82f6', bg: 'white' },
+                    { label: '% Confirmación', val: `${confRate}%`, icon: <CheckCircle2 size={20} />, color: '#22c55e', bg: '#f0fdf4' },
+                    { label: '% Cancelación', val: `${cancelRate}%`, icon: <XCircle size={20} />, color: '#ef4444', bg: '#fef2f2' },
                 ].map(k => (
-                    <div key={k.label} className="card" style={{ padding: '16px 20px', background: k.bg }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div key={k.label} className="card" style={{ padding: '24px', background: k.bg, borderRadius: 24, border: '1px solid #f1f5f9', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <div style={{ fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{k.label}</div>
-                                <div style={{ fontSize: 26, fontWeight: 950, color: k.color }}>{k.val}</div>
+                                <div style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.02em' }}>{k.label}</div>
+                                <div style={{ fontSize: 32, fontWeight: 950, color: k.color }}>{k.val}</div>
                             </div>
-                            <div style={{ color: k.color, opacity: 0.5 }}>{k.icon}</div>
+                            <div style={{ width: 44, height: 44, background: `${k.color}10`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: k.color }}>{k.icon}</div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Finanzas Reales */}
-            <div style={{ background: ORANGE, borderRadius: 24, padding: 28, color: 'white', marginBottom: 24, boxShadow: `0 20px 40px ${ORANGE}40` }}>
-                <h3 style={{ fontSize: 12, fontWeight: 800, opacity: 0.85, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    💰 Finanzas Reales — Entregados
-                </h3>
-                <div className="responsive-grid grid-cols-2-1" style={{ gap: 24 }}>
-                    <div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16, marginBottom: 16 }}>
+            {/* Huge Orange Financial Box */}
+            <div style={{ padding: '40px', background: PRIMARY, borderRadius: 32, color: 'white', position: 'relative', overflow: 'hidden', boxShadow: `0 20px 40px ${PRIMARY}25`, marginBottom: 32 }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 70%)' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1, flexWrap: 'wrap', gap: 32 }}>
+                    <h3 style={{ fontSize: 24, fontWeight: 950, display: 'flex', alignItems: 'center', gap: 12, color: 'white' }}>
+                        $ Finanzas Reales (Entregados)
+                    </h3>
+                </div>
+
+                <div className="responsive-grid grid-cols-2-1" style={{ gap: 40, position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                        {/* 4 Financial Columns */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
                             {[
-                                { l: 'Ventas Totales (+)', v: s.ventasBrutas },
-                                { l: 'Costo Prov. (-)', v: s.costoProveedor },
-                                { l: 'Fletes Ent. (+)', v: s.fletesEntregados },
-                                { l: 'Fletes Dev. (-)', v: s.fletesDevolucion },
+                                { l: 'Ventas Totales (+)', v: s.ventasBrutas, sub: 'Recaudo efectivo' },
+                                { l: 'Costo Prod (-)', v: s.costoProveedor, sub: 'Mayorista' },
+                                { l: 'Fletes Ent. (-)', v: s.fletesEntregados, sub: 'Guías entregadas' },
+                                { l: 'Fletes Dev. (-)', v: s.fletesDevolucion, sub: 'Logística inversa' },
                             ].map(f => (
                                 <div key={f.l}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.75 }}>{f.l}</div>
-                                    <div style={{ fontSize: 15, fontWeight: 900, marginTop: 4 }}>${f.v.toLocaleString()}</div>
+                                    <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, textTransform: 'uppercase' }}>{f.l}</div>
+                                    <div style={{ fontSize: 24, fontWeight: 950, marginTop: 4 }}>${f.v.toLocaleString()}</div>
+                                    <div style={{ fontSize: 10, opacity: 0.6, marginTop: 2 }}>{f.sub}</div>
                                 </div>
                             ))}
                         </div>
-                        <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700 }}>✅ Pedidos sin Recaudo (Anticipado)</span>
-                            <span style={{ fontSize: 15, fontWeight: 900 }}>${s.pagoAnticipado.toLocaleString()}</span>
+
+                        {/* Anticipado */}
+                        <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <CheckCircle2 size={20} />
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 900 }}>PEDIDOS SIN RECAUDO</div>
+                                    <div style={{ fontSize: 11, opacity: 0.8 }}>Pago Anticipado</div>
+                                </div>
+                            </div>
+                            <span style={{ fontSize: 24, fontWeight: 950 }}>${s.pagoAnticipado.toLocaleString()}</span>
                         </div>
-                        {/* Proyección tránsito */}
-                        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: '12px 16px' }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, opacity: 0.8, marginBottom: 10 }}>📦 Proyección de lo que viene en Tránsito — ${s.transitoTotalVal.toLocaleString()}</div>
-                            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8 }}>
-                                {[1, 0.9, 0.8, 0.7, 0.6].map(r => (
-                                    <div key={r} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
-                                        <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.75 }}>Si entrega {r * 100}%</div>
-                                        <div style={{ fontSize: 13, fontWeight: 900, marginTop: 4 }}>${Math.round(s.transitoTotalVal * r).toLocaleString()}</div>
+
+                        {/* Projections */}
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                <div style={{ fontSize: 13, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <Activity size={16} /> Proyección de lo que viene en camino (Tránsito)
+                                </div>
+                                <span style={{ fontSize: 14, fontWeight: 950, background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 10 }}>100% = ${s.transitoTotalVal.toLocaleString()}</span>
+                            </div>
+                            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+                                {[0.9, 0.8, 0.7, 0.6, 0.5].map(r => (
+                                    <div key={r} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px 10px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <div style={{ fontSize: 10, fontWeight: 850 }}>SI ENTREGAS {r * 100}%</div>
+                                        <div style={{ fontSize: 15, fontWeight: 950, marginTop: 6 }}>${Math.round(s.transitoTotalVal * r).toLocaleString()}</div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Ads + Ganancia */}
-                    <div style={{ background: 'white', borderRadius: 20, padding: 22, color: '#1a1a2e' }}>
-                        <div style={{ fontSize: 9, fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>Gasto en Pauta (Ads)</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, margin: '8px 0 4px', borderBottom: '2px solid #eee', paddingBottom: 6 }}>
-                            <span style={{ fontSize: 18, fontWeight: 900, color: '#999' }}>$</span>
-                            <input className="input-field" style={{ border: 'none', background: 'none', padding: 0, fontSize: 18, fontWeight: 900, width: '100%', outline: 'none' }} value={adSpend} onChange={e => setAdSpend(Number(e.target.value))} />
+                    {/* Right side box (Ads + Net) */}
+                    <div style={{ background: 'white', borderRadius: 28, padding: 32, color: '#1a1a2e', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>Gasto en Pauta (ADS)</div>
+                                <Activity size={14} color="#94a3b8" />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#f8fafc', padding: '16px 20px', borderRadius: 20, border: '1px solid #f1f5f9' }}>
+                                <span style={{ fontSize: 24, fontWeight: 950, color: '#94a3b8' }}>$</span>
+                                <input
+                                    className="input-field"
+                                    style={{ border: 'none', background: 'none', padding: 0, fontSize: 28, fontWeight: 950, width: '100%', outline: 'none', color: '#1a1a2e' }}
+                                    value={adSpend}
+                                    onChange={e => {
+                                        const val = Number(e.target.value.replace(/[^0-9]/g, ''))
+                                        setAdSpend(val)
+                                    }}
+                                />
+                            </div>
                         </div>
-                        <div style={{ marginTop: 16 }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>Ganancia Neta Real</div>
-                            <div style={{ fontSize: 30, fontWeight: 950, color: netProfit >= 0 ? '#27ae60' : '#e74c3c', marginTop: 4, letterSpacing: '-0.02em' }}>${netProfit.toLocaleString()}</div>
-                            <div style={{ fontSize: 10, color: '#bbb', marginTop: 4 }}>* Incluye pago anticipado</div>
+
+                        <div style={{ marginTop: 40 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                <div style={{ fontSize: 14, fontWeight: 950, color: '#64748b' }}>GANANCIA NETA REAL</div>
+                                <AlertCircle size={16} color="#94a3b8" />
+                            </div>
+                            <div style={{ fontSize: 48, fontWeight: 950, color: netProfit >= 0 ? '#22c55e' : '#ef4444', letterSpacing: '-0.04em' }}>
+                                ${netProfit.toLocaleString()}
+                            </div>
+                            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12, fontWeight: 700 }}>* Esta ganancia incluye el dinero de Pago Anticipado.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Efficiency Row */}
-            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
+            {/* Strategic Performance Widgets */}
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 20 }}>
                 {[
-                    { label: 'Efectividad Entrega', val: `${delivRate}%`, icon: <CheckCircle2 size={20} />, color: '#27ae60', type: 'delivery' as ModalType },
-                    { label: 'En Tránsito Global', val: `${transitRate}%`, icon: <Truck size={20} />, color: '#3498db', type: 'transit' as ModalType },
-                    { label: 'Tasa Devolución', val: `${retRate}%`, icon: <RefreshCw size={20} />, color: '#f39c12', type: 'returns' as ModalType },
-                ].map(e => (
-                    <div key={e.label} className="card shadow-hover" onClick={() => onModal(e.type)} style={{ padding: '20px 24px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    { label: 'EFECTIVIDAD ENTREGA', val: `${delivRate}%`, type: 'delivery' as ModalType, color: '#22c55e' },
+                    { label: 'EN TRÁNSITO GLOBAL', val: `${transitRate}%`, type: 'transit' as ModalType, color: '#3b82f6' },
+                    { label: 'TASA DEVOLUCIÓN', val: `${retRate}%`, type: 'returns' as ModalType, color: '#f59e0b' },
+                ].map(w => (
+                    <div key={w.label} className="card shadow-hover" onClick={() => onModal(w.type)} style={{ padding: '28px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 24 }}>
                         <div>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{e.label}</div>
-                            <div style={{ fontSize: 32, fontWeight: 950, color: e.color }}>{e.val}</div>
+                            <div style={{ fontSize: 11, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 12 }}>{w.label}</div>
+                            <div style={{ fontSize: 42, fontWeight: 950, color: w.color }}>{w.val}</div>
                         </div>
-                        <div style={{ color: e.color, opacity: 0.3 }}>{e.icon}</div>
+                        <div style={{ width: 12, height: 12, borderRadius: '50%', background: w.color, boxShadow: `0 0 12px ${w.color}50` }}></div>
                     </div>
                 ))}
             </div>
 
-            {/* Status Cards Row 1 */}
-            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
-                {statusCards1.map(c => (
-                    <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.detail)} style={{ padding: '16px', cursor: 'pointer', borderBottom: `3px solid ${c.color}` }}>
-                        <div style={{ fontSize: 9, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{c.label}</div>
+            {/* Status Grid Row 1 (5 items) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 16 }}>
+                {statusGrid1.map(c => (
+                    <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.label)} style={{ padding: '24px 20px', cursor: 'pointer', borderRadius: 24, borderLeft: `4px solid ${c.color}` }}>
+                        <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>{c.label}</div>
                         <div style={{ fontSize: 24, fontWeight: 950, color: c.color }}>{c.count}</div>
-                        {c.val > 0 && <div style={{ fontSize: 10, color: '#bbb', marginTop: 4 }}>${c.val.toLocaleString()}</div>}
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 8, fontWeight: 700 }}>${(c.val || 0).toLocaleString()}</div>
                     </div>
                 ))}
             </div>
 
-            {/* Status Cards Row 2 */}
-            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 32 }}>
-                {statusCards2.map(c => (
-                    <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.detail)} style={{ padding: '16px', cursor: 'pointer', borderBottom: `3px solid ${c.color}` }}>
-                        <div style={{ fontSize: 9, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{c.label}</div>
+            {/* Status Grid Row 2 (4 items) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
+                {statusGrid2.map(c => (
+                    <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.label)} style={{ padding: '24px 20px', cursor: 'pointer', borderRadius: 24, borderTop: `4px solid ${c.color}` }}>
+                        <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>{c.label}</div>
                         <div style={{ fontSize: 28, fontWeight: 950, color: c.color }}>{c.count}</div>
-                        {c.val > 0 && <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>${c.val.toLocaleString()}</div>}
+                        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 8, fontWeight: 700 }}>${(c.val || 0).toLocaleString()}</div>
                     </div>
                 ))}
+            </div>
+
+            {/* Sections Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <div style={{ width: 6, height: 28, background: '#1a1a2e', borderRadius: 4 }}></div>
+                <h2 style={{ fontSize: 22, fontWeight: 950, color: '#1a1a2e' }}>Efectividad Transportadora</h2>
             </div>
 
             {/* Transportadora Table */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 28 }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Truck size={16} color={ORANGE} />
-                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#1a1a2e' }}>Efectividad por Transportadora</h3>
-                    <span style={{ fontSize: 11, color: '#bbb', marginLeft: 4 }}>— Haz clic en una fila para ver detalles</span>
-                </div>
+            <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 28, border: '1px solid #f1f5f9', marginBottom: 40 }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead><tr>{['Empresa', 'Enviados', 'Tránsito', 'Devoluciones', 'Cancelados', 'Rechazados', 'Entregados'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
                         <tbody>
                             {Object.entries(byCarrier).sort((a, b) => b[1].sent - a[1].sent).map(([name, c]) => (
                                 <tr key={name} onClick={() => onCarrier(name)} style={{ background: 'white', cursor: 'pointer' }} className="shadow-hover">
-                                    <td style={{ ...td, fontWeight: 800, color: '#1a1a2e' }}>{name}</td>
-                                    <td style={td}>{c.sent}</td>
-                                    <td style={{ ...td, color: '#3498db', fontWeight: 700 }}>{c.transit} <span style={{ color: '#bbb', fontWeight: 400 }}>({((c.transit / c.sent) * 100).toFixed(0)}%)</span></td>
-                                    <td style={{ ...td, color: '#e74c3c', fontWeight: 700 }}>{c.dev} <span style={{ color: '#bbb', fontWeight: 400 }}>({((c.dev / c.sent) * 100).toFixed(0)}%)</span></td>
+                                    <td style={{ ...td, fontWeight: 900, color: '#1a1a2e', paddingLeft: 24 }}>{name}</td>
+                                    <td style={{ ...td, fontWeight: 700 }}>{c.sent}</td>
+                                    <td style={{ ...td, color: '#3b82f6', fontWeight: 800 }}>{c.transit} <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 10 }}>({((c.transit / c.sent) * 100).toFixed(0)}%)</span></td>
+                                    <td style={{ ...td, color: '#ef4444', fontWeight: 800 }}>{c.dev} <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 10 }}>({((c.dev / c.sent) * 100).toFixed(0)}%)</span></td>
                                     <td style={td}>{c.cancel}</td>
                                     <td style={td}>{c.rechazado}</td>
-                                    <td style={{ ...td, color: '#27ae60', fontWeight: 800 }}>{c.entregado} <span style={{ color: '#bbb', fontWeight: 400 }}>({((c.entregado / c.sent) * 100).toFixed(0)}%)</span></td>
+                                    <td style={{ ...td, color: '#22c55e', fontWeight: 900, paddingRight: 24 }}>{c.entregado} <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 10 }}>({((c.entregado / (c.sent - c.cancel)) * 100).toFixed(0)}%)</span></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -441,59 +544,58 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                 </div>
             </div>
 
-            {/* Rentabilidad por Producto */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Activity size={16} color={ORANGE} />
-                        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#1a1a2e' }}>Rentabilidad por Producto</h3>
-                    </div>
-                    <span style={{ fontSize: 11, color: ORANGE, fontWeight: 700 }}>Haz clic en una fila para añadir tu gasto en pauta</span>
-                </div>
+            {/* Rentabilidad Table */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <div style={{ width: 6, height: 28, background: PRIMARY, borderRadius: 4 }}></div>
+                <h2 style={{ fontSize: 22, fontWeight: 950, color: '#1a1a2e' }}>Rentabilidad por Producto</h2>
+            </div>
+
+            <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 28, border: '1px solid #f1f5f9' }}>
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead><tr>
-                            <th style={th}>Producto</th>
-                            <th style={{ ...th, color: '#27ae60' }}>Entr.</th><th style={{ ...th, color: '#27ae60' }}>% Efec.</th>
-                            <th style={{ ...th, color: '#3498db' }}>Trán.</th><th style={{ ...th, color: '#3498db' }}>% Trán.</th>
-                            <th style={{ ...th, color: '#e74c3c' }}>Dev.</th><th style={{ ...th, color: '#e74c3c' }}>% Dev.</th>
-                            <th style={th}>Ventas</th><th style={{ ...th, color: ORANGE }}>Pauta</th><th style={th}>Utilidad</th>
+                            <th style={{ ...th, paddingLeft: 24 }}>Producto</th>
+                            <th style={{ ...th, color: '#22c55e' }}>Entr.</th><th style={{ ...th, color: '#22c55e' }}>% Efec.</th>
+                            <th style={{ ...th, color: '#3b82f6' }}>Trán.</th><th style={{ ...th, color: '#3b82f6' }}>% Trán.</th>
+                            <th style={{ ...th, color: '#ef4444' }}>Dev.</th><th style={{ ...th, color: '#ef4444' }}>% Dev.</th>
+                            <th style={th}>Ventas</th><th style={{ ...th, color: PRIMARY }}>Pauta</th><th style={{ ...th, paddingRight: 24 }}>Utilidad</th>
                         </tr></thead>
                         <tbody>
                             {(() => {
-                                const byProd: Record<string, { sent: number; entr: number; tran: number; dev: number; ventas: number; costos: number; fletes: number }> = {}
+                                const byProd: Record<string, { sent: number; entr: number; tran: number; dev: number; ventas: number; costos: number; fletes: number; cancels: number }> = {}
                                 rawData.forEach((o: OrderData) => {
                                     const p = o.producto || 'Sin producto'
-                                    if (!byProd[p]) byProd[p] = { sent: 0, entr: 0, tran: 0, dev: 0, ventas: 0, costos: 0, fletes: 0 }
+                                    if (!byProd[p]) byProd[p] = { sent: 0, entr: 0, tran: 0, dev: 0, ventas: 0, costos: 0, fletes: 0, cancels: 0 }
                                     const c = classifyEstado(o.estado_dropi)
                                     byProd[p].sent++
                                     if (c.entregado) { byProd[p].entr++; byProd[p].ventas += o.valor_recaudo; byProd[p].costos += o.valor_proveedor; byProd[p].fletes += o.flete }
                                     if (c.transito) byProd[p].tran++
                                     if (c.devolucion) byProd[p].dev++
+                                    if (c.cancelado) byProd[p].cancels++
                                 })
                                 return Object.entries(byProd).sort((a, b) => b[1].ventas - a[1].ventas).map(([prod, p]) => {
                                     const pauta = productPauta[prod] || 0
                                     const utilidad = p.ventas - p.costos - p.fletes - pauta
+                                    const realSent = p.sent - p.cancels
                                     return (
-                                        <tr key={prod} style={{ cursor: 'pointer' }}>
-                                            <td style={{ ...td, fontWeight: 700, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prod}</td>
-                                            <td style={{ ...td, color: '#27ae60', fontWeight: 800 }}>{p.entr}</td>
-                                            <td style={{ ...td, color: '#27ae60' }}>{p.sent ? ((p.entr / p.sent) * 100).toFixed(0) : 0}%</td>
-                                            <td style={{ ...td, color: '#3498db' }}>{p.tran}</td>
-                                            <td style={{ ...td, color: '#3498db' }}>{p.sent ? ((p.tran / p.sent) * 100).toFixed(0) : 0}%</td>
-                                            <td style={{ ...td, color: '#e74c3c' }}>{p.dev}</td>
-                                            <td style={{ ...td, color: '#e74c3c' }}>{p.sent ? ((p.dev / p.sent) * 100).toFixed(0) : 0}%</td>
-                                            <td style={{ ...td, fontWeight: 700 }}>${p.ventas.toLocaleString()}</td>
+                                        <tr key={prod} style={{ background: 'white' }}>
+                                            <td style={{ ...td, fontWeight: 900, color: '#1a1a2e', paddingLeft: 24, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prod}</td>
+                                            <td style={{ ...td, color: '#22c55e', fontWeight: 900 }}>{p.entr}</td>
+                                            <td style={{ ...td, color: '#22c55e', fontWeight: 700 }}>{realSent ? ((p.entr / realSent) * 100).toFixed(0) : 0}%</td>
+                                            <td style={{ ...td, color: '#3b82f6', fontWeight: 900 }}>{p.tran}</td>
+                                            <td style={{ ...td, color: '#3b82f6', fontWeight: 700 }}>{realSent ? ((p.tran / realSent) * 100).toFixed(0) : 0}%</td>
+                                            <td style={{ ...td, color: '#ef4444', fontWeight: 900 }}>{p.dev}</td>
+                                            <td style={{ ...td, color: '#ef4444', fontWeight: 700 }}>{realSent ? ((p.dev / realSent) * 100).toFixed(0) : 0}%</td>
+                                            <td style={{ ...td, fontWeight: 800 }}>${p.ventas.toLocaleString()}</td>
                                             <td style={td}>
                                                 <input
-                                                    style={{ border: '1px solid #eee', borderRadius: 8, padding: '4px 8px', width: 90, fontSize: 12, fontWeight: 700, color: ORANGE, outline: 'none' }}
+                                                    style={{ border: '1px solid #f1f5f9', background: '#f8fafc', borderRadius: 12, padding: '8px 12px', width: 100, fontSize: 13, fontWeight: 900, color: PRIMARY, outline: 'none' }}
                                                     value={pauta || ''}
                                                     placeholder="$ pauta"
-                                                    onChange={e => setProductPauta((prev: Record<string, number>) => ({ ...prev, [prod]: Number(e.target.value) }))}
-                                                    onClick={e => e.stopPropagation()}
+                                                    onChange={e => setProductPauta((prev: Record<string, number>) => ({ ...prev, [prod]: Number(e.target.value.replace(/[^0-9]/g, '')) }))}
                                                 />
                                             </td>
-                                            <td style={{ ...td, fontWeight: 900, color: utilidad >= 0 ? '#27ae60' : '#e74c3c' }}>${utilidad.toLocaleString()}</td>
+                                            <td style={{ ...td, fontWeight: 950, color: utilidad >= 0 ? '#22c55e' : '#ef4444', paddingRight: 24, fontSize: 14 }}>${utilidad.toLocaleString()}</td>
                                         </tr>
                                     )
                                 })
@@ -768,7 +870,7 @@ function HistoryView({ history, onBack, onSelect, onDelete }: any) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {history.map((h: any) => (
                         <div key={h.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 24px' }}>
-                            <div style={{ width: 44, height: 44, background: `${ORANGE}15`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color={ORANGE} /></div>
+                            <div style={{ width: 44, height: 44, background: `${PRIMARY}15`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color={PRIMARY} /></div>
                             <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => onSelect(h)}>
                                 <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a2e' }}>{h.name}</div>
                                 <div style={{ fontSize: 11, color: '#999', marginTop: 3 }}>{h.date} • {h.stats?.totalOrders} pedidos • {h.stats?.entregados} entregados</div>
@@ -789,7 +891,7 @@ function HistoryView({ history, onBack, onSelect, onDelete }: any) {
 function LoadingSpinner() {
     return (
         <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-            <Loader2 className="spin" size={48} color={ORANGE} />
+            <Loader2 className="spin" size={48} color={PRIMARY} />
             <div style={{ textAlign: 'center' }}>
                 <h2 style={{ fontSize: 18, fontWeight: 800 }}>Procesando Datos...</h2>
                 <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Analizando pedidos, transportadoras y finanzas.</p>

@@ -18,7 +18,7 @@ function Toggle({ active, onToggle }: { active: boolean, onToggle: () => void })
             onClick={onToggle}
             style={{
                 width: 40, height: 22, borderRadius: 11,
-                background: active ? '#4CAF50' : '#ddd',
+                background: active ? '#22c55e' : '#ddd',
                 cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
                 flexShrink: 0
             }}
@@ -300,7 +300,7 @@ export default function SettingsView() {
     if (loading) {
         return (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
-                <Zap size={20} color="#4CAF50" style={{ animation: 'spin 1s linear infinite' }} />
+                <Zap size={20} color="#22c55e" style={{ animation: 'spin 1s linear infinite' }} />
             </div>
         )
     }
@@ -380,7 +380,7 @@ export default function SettingsView() {
                         <User size={32} color="#999" />
                         <div style={{
                             position: 'absolute', bottom: -2, right: -2, width: 24, height: 24,
-                            borderRadius: '50%', background: '#4CAF50', display: 'flex',
+                            borderRadius: '50%', background: '#22c55e', display: 'flex',
                             alignItems: 'center', justifyContent: 'center', border: '2px solid white'
                         }}>
                             <Camera size={11} color="white" />
@@ -389,7 +389,7 @@ export default function SettingsView() {
                     <div style={{ flex: 1, minWidth: '200px' }}>
                         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#333' }}>{profile.displayName}</h2>
                         <span style={{
-                            fontSize: 10, fontWeight: 700, color: '#4CAF50', textTransform: 'uppercase' as const,
+                            fontSize: 10, fontWeight: 700, color: '#22c55e', textTransform: 'uppercase' as const,
                             letterSpacing: '0.1em', background: '#f0faf0', padding: '3px 8px',
                             borderRadius: 4, display: 'inline-block', marginTop: 4
                         }}>VERIFICADO</span>
@@ -413,13 +413,13 @@ export default function SettingsView() {
                             >
                                 <div style={{
                                     width: 38, height: 38, borderRadius: 8, background: activeTab === item.tab ? '#f0faf0' : '#fafafa',
-                                    border: `1px solid ${activeTab === item.tab ? '#4CAF50' : '#eee'}`,
+                                    border: `1px solid ${activeTab === item.tab ? '#22c55e' : '#eee'}`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     transition: 'all 0.2s'
                                 }}>
-                                    <item.icon size={16} color={activeTab === item.tab ? '#4CAF50' : '#666'} />
+                                    <item.icon size={16} color={activeTab === item.tab ? '#22c55e' : '#666'} />
                                 </div>
-                                <span style={{ fontSize: 8, color: activeTab === item.tab ? '#4CAF50' : '#999', textAlign: 'center', maxWidth: 56, fontWeight: activeTab === item.tab ? 700 : 400 }}>{item.label}</span>
+                                <span style={{ fontSize: 8, color: activeTab === item.tab ? '#22c55e' : '#999', textAlign: 'center', maxWidth: 56, fontWeight: activeTab === item.tab ? 700 : 400 }}>{item.label}</span>
                             </div>
                         ))}
                     </div>
@@ -438,10 +438,10 @@ export default function SettingsView() {
                             style={{
                                 padding: '12px 20px', fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500,
                                 color: activeTab === tab.id ? '#333' : '#999',
-                                borderBottom: `2px solid ${activeTab === tab.id ? '#4CAF50' : 'transparent'}`,
+                                borderBottom: `2px solid ${activeTab === tab.id ? '#22c55e' : 'transparent'}`,
                                 background: 'none', border: 'none',
                                 borderBottomWidth: 2, borderBottomStyle: 'solid' as const,
-                                borderBottomColor: activeTab === tab.id ? '#4CAF50' : 'transparent',
+                                borderBottomColor: activeTab === tab.id ? '#22c55e' : 'transparent',
                                 cursor: 'pointer', transition: 'all 0.2s'
                             }}
                         >
@@ -457,7 +457,7 @@ export default function SettingsView() {
                         {/* Información del Negocio */}
                         <SectionCard>
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Store size={16} color="#4CAF50" /> Información del Negocio
+                                <Store size={16} color="#22c55e" /> Información del Negocio
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 16 }}>
                                 <div>
@@ -512,7 +512,7 @@ export default function SettingsView() {
                         {/* Contacto */}
                         <SectionCard>
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Mail size={16} color="#4CAF50" /> Datos de Contacto
+                                <Mail size={16} color="#22c55e" /> Datos de Contacto
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                                 <div>
@@ -545,7 +545,7 @@ export default function SettingsView() {
                         {/* Redes Sociales */}
                         <SectionCard>
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Link size={16} color="#4CAF50" /> Redes Sociales
+                                <Link size={16} color="#22c55e" /> Redes Sociales
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                                 {[
@@ -569,7 +569,7 @@ export default function SettingsView() {
                         {/* Zona horaria y preferencias */}
                         <SectionCard>
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Clock size={16} color="#4CAF50" /> Preferencias Regionales
+                                <Clock size={16} color="#22c55e" /> Preferencias Regionales
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                                 <div>
@@ -629,7 +629,7 @@ export default function SettingsView() {
                         <SectionCard>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                                 <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <Globe size={16} color="#4CAF50" /> Configuración Regional
+                                    <Globe size={16} color="#22c55e" /> Configuración Regional
                                 </h3>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>

@@ -230,6 +230,14 @@ export default function HomePage() {
   }
 
   const [activeView, setActiveView] = useState<string>('analyzer')
+
+  // Redirección de módulos antiguos (Migración)
+  useEffect(() => {
+    if (activeView === 'banners' || activeView === 'landings') {
+      setActiveView('creative_studio')
+    }
+  }, [activeView])
+
   const [showSidebar, setShowSidebar] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'form'>('grid')
@@ -237,13 +245,45 @@ export default function HomePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!selectedProduct) {
+      alert('Por favor selecciona un producto primero')
+      return
+    }
+
     setIsGenerating(true)
-    setTimeout(() => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('No user found')
+
+      // 1. Simulate AI logic or call an API (omitted for speed, using mock delay)
+      await new Promise(resolve => setTimeout(resolve, 4000))
+
+      const mockImageUrl = 'https://images.unsplash.com/photo-1614850553959-d21b651cc79c?q=80&w=1000&auto=format&fit=crop'
+
+      // 2. Save to creative_pipeline in Supabase
+      const { data: asset, error } = await supabase
+        .from('creative_pipeline')
+        .insert({
+          user_id: user.id,
+          title: `Creativo: ${selectedProduct.name} - ${new Date().toLocaleDateString()}`,
+          platform: 'Meta',
+          status: 'prod', // Map to matching ID in ProductivityView.tsx ('prod')
+          thumbnail_url: mockImageUrl
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setGeneratedImage(mockImageUrl)
       setIsGenerating(false)
       setShowSuccessModal(true)
-      setGeneratedImage('https://images.unsplash.com/photo-1614850553959-d21b651cc79c?q=80&w=1000&auto=format&fit=crop')
-    }, 4000)
+    } catch (error: any) {
+      console.error('Error generating asset:', error)
+      alert('Error al generar el activo: ' + error.message)
+      setIsGenerating(false)
+    }
   }
 
   const [products, setProducts] = useState<{ id: string, name: string, description: string, url?: string }[]>([])
@@ -400,8 +440,7 @@ export default function HomePage() {
       case 'operations': return 'ANÁLISIS DE OPERACIÓN'
       case 'logistics': return 'AUDITOR LOGÍSTICO'
       case 'marketing': return 'PAUTA & MARKETING'
-      case 'banners': return 'BANNER STUDIO'
-      case 'landings': return 'LANDING FACTORY'
+      case 'creative_studio': return 'CREATIVE STUDIO'
       case 'simulator': return 'CONTROL DIARIO'
       case 'quick_calc': return 'CALCULADORA EXPRESS'
       case 'settings': return 'AJUSTES DE CUENTA'
@@ -550,7 +589,7 @@ export default function HomePage() {
 
           {/* Content Area */}
           {activeView === 'analyzer' ? (
-            <DashboardView />
+            <DashboardView onViewChange={setActiveView} onNewAnalysis={handleNewAnalysis} />
           ) : activeView === 'settings' ? (
             <SettingsView />
           ) : activeView === 'simulator' ? (
@@ -569,12 +608,12 @@ export default function HomePage() {
             <MarketingView />
           ) : activeView === 'productivity' ? (
             <ProductivityView />
-          ) : (activeView === 'banners' || activeView === 'landings') && viewMode === 'grid' ? (
+          ) : activeView === 'creative_studio' && viewMode === 'grid' ? (
             <div className="main-scroll custom-scrollbar">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
                 <div>
                   <h1 style={{ fontSize: 28, fontWeight: 700, color: '#333', marginBottom: 4 }}>
-                    {activeView === 'banners' ? 'Banner Studio' : 'Landing Factory'}
+                    Creative Studio
                   </h1>
                   <p style={{ color: '#4CAF50', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Sparkles size={14} />
@@ -652,7 +691,7 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-          ) : (activeView === 'banners' || activeView === 'landings') && viewMode === 'form' ? (
+          ) : activeView === 'creative_studio' && viewMode === 'form' ? (
             <main className="main-scroll custom-scrollbar">
               <div style={{ maxWidth: 960, margin: '0 auto', width: '100%' }}>
                 {/* Header */}
@@ -670,7 +709,7 @@ export default function HomePage() {
                   <div>
                     <h2 style={{ fontSize: 22, fontWeight: 700, color: '#333' }}>{selectedProduct?.name}</h2>
                     <p style={{ color: '#999', fontSize: 12 }}>
-                      Configurando {activeView === 'banners' ? 'Creativos Publicitarios' : 'Sección de Landing'}
+                      Diseñando Creativos & Landings de Alta Conversión
                     </p>
                   </div>
                 </div>
@@ -816,12 +855,21 @@ export default function HomePage() {
                         <img src={generatedImage || ''} alt="Generated Asset" style={{ width: '100%', height: 200, objectFit: 'cover' }} />
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                        <button onClick={() => setShowSuccessModal(false)} className="btn-primary" style={{ justifyContent: 'center' }}>
-                          <Share2 size={14} /> Publicar
-                        </button>
-                        <button onClick={() => setShowSuccessModal(false)} className="btn-secondary" style={{ justifyContent: 'center' }}>
-                          <Download size={14} /> Descargar
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          <button onClick={() => setShowSuccessModal(false)} className="btn-primary" style={{ justifyContent: 'center' }}>
+                            <Share2 size={14} /> Publicar
+                          </button>
+                          <button onClick={() => setShowSuccessModal(false)} className="btn-secondary" style={{ justifyContent: 'center' }}>
+                            <Download size={14} /> Descargar
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => { setActiveView('productivity'); setShowSuccessModal(false); }}
+                          className="btn-secondary"
+                          style={{ justifyContent: 'center', width: '100%', border: '1px solid #4CAF50', color: '#4CAF50' }}
+                        >
+                          Ver en Hub de Productividad
                         </button>
                       </div>
                     </div>

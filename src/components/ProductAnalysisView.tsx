@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import {
     Search, Zap, Target, Plus, Trash2,
     Save, FileText, CheckCircle2, XCircle, ChevronRight,
-    Edit3, Activity, X, Info
+    Edit3, Activity, X, Info, ShoppingCart
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -482,7 +482,30 @@ export default function ProductAnalysisView() {
                                             </div>
                                         </Section>
                                     </div>
+                                </div>
 
+                                {/* Idea 9: Comparador de Proveedores */}
+                                <div style={{ marginTop: 32, padding: 24, background: '#f8fafc', borderRadius: 24, border: '1px solid #e2e8f0' }}>
+                                    <h3 style={{ fontSize: 13, fontWeight: 900, color: '#1a1a2e', textTransform: 'uppercase', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <ShoppingCart size={16} color="#4CAF50" /> Compara Proveedores
+                                    </h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+                                        <div style={{ background: 'white', padding: 20, borderRadius: 16, border: '1px solid #eee' }}>
+                                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8' }}>PROVEEDOR A (Dropi / Local)</div>
+                                            <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: '#1a1a2e' }}>${activeProduct.supplierPrice.toLocaleString()}</div>
+                                            <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, marginTop: 6 }}>ROI Est: {activeProduct.supplierPrice > 0 ? (((activeProduct.sellingPrice - activeProduct.supplierPrice) / activeProduct.supplierPrice) * 100).toFixed(0) : 0}%</div>
+                                        </div>
+                                        <div style={{ background: 'white', padding: 20, borderRadius: 16, border: '1px solid #eee' }}>
+                                            <div style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8' }}>PROVEEDOR B (AliExpress / China)</div>
+                                            <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: '#3498db' }}>${(activeProduct.supplierPrice * 0.7).toLocaleString()}</div>
+                                            <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, marginTop: 6 }}>ROI Est: {activeProduct.supplierPrice > 0 ? (((activeProduct.sellingPrice - (activeProduct.supplierPrice * 0.7)) / (activeProduct.supplierPrice * 0.7)) * 100).toFixed(0) : 0}%</div>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 10px' }}>
+                                            <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.5 }}>
+                                                Al importar directamente puedes ahorrar hasta un <strong>30%</strong> en el COGS.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -28,73 +28,27 @@ type Tab = 'checklist' | 'financial' | 'kanban' | 'marketing' | 'spy'
 export default function ProductivityView() {
     const [activeTab, setActiveTab] = useState<Tab>('checklist')
     const [tasks, setTasks] = useState<any[]>([])
-    const [newTask, setNewTask] = useState('')
+    const [pipelineAssets, setPipelineAssets] = useState<any[]>([])
+    const [competitors, setCompetitors] = useState<any[]>([])
+    const [analyses, setAnalyses] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetchTasks()
+        fetchData()
     }, [])
 
-    const fetchTasks = async () => {
-        const { data } = await supabase
-            .from('productivity_tasks')
-            .select('*')
-            .order('created_at', { ascending: false })
-        if (data) setTasks(data)
+    const fetchData = async () => {
+        setLoading(true)
+        const { data: tasksData } = await supabase.from('productivity_tasks').select('*').order('created_at', { ascending: false })
+        const { data: pipelineData } = await supabase.from('creative_pipeline').select('*').order('created_at', { ascending: true })
+        const { data: competitorsData } = await supabase.from('competitor_monitor').select('*').order('created_at', { ascending: false })
+        const { data: analysesData } = await supabase.from('analyses').select('id, product_name').order('created_at', { ascending: false })
+
+        if (tasksData) setTasks(tasksData)
+        if (pipelineData) setPipelineAssets(pipelineData)
+        if (competitorsData) setCompetitors(competitorsData)
+        if (analysesData) setAnalyses(analysesData)
         setLoading(false)
-    }
-
-    const addTask = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!newTask.trim()) return
-
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { data, error } = await supabase
-            .from('productivity_tasks')
-            .insert({
-                user_id: user.id,
-                title: newTask,
-                status: 'pending'
-            })
-            .select()
-            .single()
-
-        if (data) {
-            setTasks([data, ...tasks])
-            setNewTask('')
-        }
-    }
-
-    const toggleTask = async (id: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
-        const { error } = await supabase
-            .from('productivity_tasks')
-            .update({ status: newStatus })
-            .eq('id', id)
-
-        if (!error) {
-            setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t))
-        }
-    }
-
-    const deleteTask = async (id: string) => {
-        const { error } = await supabase
-            .from('productivity_tasks')
-            .delete()
-            .eq('id', id)
-
-        if (!error) {
-            setTasks(tasks.filter(t => t.id !== id))
-        }
-    }
-
-    const startFocus = (task: any) => {
-        // Communication with Pomodoro through localStorage
-        localStorage.setItem('pixora_active_task', JSON.stringify(task))
-        // Trigger a custom event for the Pomodoro component to catch
-        window.dispatchEvent(new Event('pixora_task_focus'))
     }
 
     return (
@@ -155,165 +109,11 @@ export default function ProductivityView() {
 
             {/* Content Area */}
             <div style={{ animation: 'slideUp 0.4s ease-out' }}>
-                {activeTab === 'checklist' && (
-                    <div style={{ maxWidth: 800 }}>
-                        {/* Daily Routine Intro */}
-                        <div style={{
-                            background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
-                            borderRadius: 24,
-                            padding: 32,
-                            color: 'white',
-                            marginBottom: 32,
-                            position: 'relative',
-                            overflow: 'hidden',
-                            boxShadow: '0 20px 40px rgba(76, 175, 80, 0.2)'
-                        }}>
-                            <div style={{ position: 'relative', zIndex: 1 }}>
-                                <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Rutina de Éxito Dropshipping</h3>
-                                <p style={{ fontSize: 13, opacity: 0.9, maxWidth: 500, lineHeight: 1.6 }}>
-                                    "El éxito es la suma de pequeños esfuerzos repetidos día tras día."
-                                    Completa tus tareas críticas y usa el Pomodoro para mantener el enfoque.
-                                </p>
-                            </div>
-                            <Activity
-                                size={120}
-                                color="rgba(255,255,255,0.1)"
-                                style={{ position: 'absolute', right: -20, bottom: -20 }}
-                            />
-                        </div>
-
-                        {/* Task Form */}
-                        <form onSubmit={addTask} style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-                            <input
-                                value={newTask}
-                                onChange={e => setNewTask(e.target.value)}
-                                placeholder="Agregar nueva tarea (ej: Revisar ROAS en Facebook Ads)..."
-                                style={{
-                                    flex: 1,
-                                    padding: '14px 20px',
-                                    borderRadius: 16,
-                                    border: '1px solid #e2e8f0',
-                                    fontSize: 14,
-                                    outline: 'none',
-                                    transition: 'all 0.2s'
-                                }}
-                                onFocus={e => e.currentTarget.style.borderColor = '#4CAF50'}
-                                onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
-                            />
-                            <button
-                                type="submit"
-                                style={{
-                                    padding: '0 24px',
-                                    borderRadius: 16,
-                                    background: '#1a1a2e',
-                                    color: 'white',
-                                    border: 'none',
-                                    fontWeight: 700,
-                                    fontSize: 14,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8
-                                }}
-                            >
-                                <Plus size={18} /> AGREGAR
-                            </button>
-                        </form>
-
-                        {/* Task List */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {loading ? (
-                                <div style={{ color: '#94a3b8', fontSize: 14 }}>Cargando tareas...</div>
-                            ) : tasks.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-                                    <CheckCircle2 size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
-                                    <p>No tienes tareas pendientes. ¡Buen trabajo!</p>
-                                </div>
-                            ) : (
-                                tasks.map(task => (
-                                    <div
-                                        key={task.id}
-                                        style={{
-                                            background: 'white',
-                                            borderRadius: 20,
-                                            padding: '18px 24px',
-                                            border: '1px solid #f1f5f9',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            transition: 'all 0.2s',
-                                            opacity: task.status === 'completed' ? 0.6 : 1
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1 }}>
-                                            <button
-                                                onClick={() => toggleTask(task.id, task.status)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                            >
-                                                {task.status === 'completed' ? (
-                                                    <CheckCircle2 size={24} color="#4CAF50" />
-                                                ) : (
-                                                    <Circle size={24} color="#cbd5e1" />
-                                                )}
-                                            </button>
-                                            <span style={{
-                                                fontSize: 15,
-                                                fontWeight: 600,
-                                                color: '#1a1a2e',
-                                                textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                                            }}>
-                                                {task.title}
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            {task.status !== 'completed' && (
-                                                <button
-                                                    onClick={() => startFocus(task)}
-                                                    style={{
-                                                        padding: '8px 14px',
-                                                        borderRadius: 10,
-                                                        background: '#f0faf0',
-                                                        color: '#4CAF50',
-                                                        border: 'none',
-                                                        fontSize: 12,
-                                                        fontWeight: 700,
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 6
-                                                    }}
-                                                >
-                                                    <Clock size={14} /> ENFOCAR
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => deleteTask(task.id)}
-                                                style={{
-                                                    padding: 8,
-                                                    borderRadius: 10,
-                                                    background: 'none',
-                                                    color: '#ef4444',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                    opacity: 0.3
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                                                onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                )}
-
+                {activeTab === 'checklist' && <Checklist tasks={tasks} setTasks={setTasks} />}
                 {activeTab === 'financial' && <FinancialCommand />}
-                {activeTab === 'kanban' && <CreativePipeline />}
-                {activeTab === 'marketing' && <AIMarketingAccelerator />}
-                {activeTab === 'spy' && <CompetitorSpy />}
+                {activeTab === 'kanban' && <CreativePipeline assets={pipelineAssets} setAssets={setPipelineAssets} />}
+                {activeTab === 'marketing' && <AIMarketingAccelerator analyses={analyses} />}
+                {activeTab === 'spy' && <CompetitorSpy competitors={competitors} setCompetitors={setCompetitors} />}
             </div>
 
             <style jsx>{`
@@ -321,11 +121,85 @@ export default function ProductivityView() {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes progress {
-                    0% { width: 0; }
-                    100% { width: 100%; }
-                }
             `}</style>
+        </div>
+    )
+}
+
+function Checklist({ tasks, setTasks }: { tasks: any[], setTasks: any }) {
+    const [newTask, setNewTask] = useState('')
+
+    const addTask = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!newTask.trim()) return
+
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data } = await supabase
+            .from('productivity_tasks')
+            .insert({ user_id: user.id, title: newTask, status: 'pending' })
+            .select()
+            .single()
+
+        if (data) {
+            setTasks([data, ...tasks])
+            setNewTask('')
+        }
+    }
+
+    const toggleTask = async (id: string, currentStatus: string) => {
+        const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
+        const { error } = await supabase.from('productivity_tasks').update({ status: newStatus }).eq('id', id)
+        if (!error) setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t))
+    }
+
+    const deleteTask = async (id: string) => {
+        const { error } = await supabase.from('productivity_tasks').delete().eq('id', id)
+        if (!error) setTasks(tasks.filter(t => t.id !== id))
+    }
+
+    return (
+        <div style={{ maxWidth: 800 }}>
+            <div style={{
+                background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
+                borderRadius: 24, padding: 32, color: 'white', marginBottom: 32, position: 'relative', overflow: 'hidden',
+                boxShadow: '0 20px 40px rgba(76, 175, 80, 0.2)'
+            }}>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Rutina de Éxito Dropshipping</h3>
+                    <p style={{ fontSize: 13, opacity: 0.9, maxWidth: 500, lineHeight: 1.6 }}>Completa tus tareas críticas y usa el Pomodoro para mantener el enfoque.</p>
+                </div>
+                <Activity size={120} color="rgba(255,255,255,0.1)" style={{ position: 'absolute', right: -20, bottom: -20 }} />
+            </div>
+
+            <form onSubmit={addTask} style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                <input
+                    value={newTask}
+                    onChange={e => setNewTask(e.target.value)}
+                    placeholder="Agregar nueva tarea..."
+                    style={{ flex: 1, padding: '14px 20px', borderRadius: 16, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }}
+                />
+                <button type="submit" style={{ padding: '0 24px', borderRadius: 16, background: '#1a1a2e', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+                    AGREGAR
+                </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {tasks.map(task => (
+                    <div key={task.id} style={{ background: 'white', borderRadius: 20, padding: '18px 24px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', opacity: task.status === 'completed' ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1 }}>
+                            <button onClick={() => toggleTask(task.id, task.status)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                {task.status === 'completed' ? <CheckCircle2 size={24} color="#4CAF50" /> : <Circle size={24} color="#cbd5e1" />}
+                            </button>
+                            <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a2e', textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>{task.title}</span>
+                        </div>
+                        <button onClick={() => deleteTask(task.id)} style={{ background: 'none', border: 'none', color: '#ef4444', opacity: 0.3, cursor: 'pointer' }}>
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
@@ -343,145 +217,193 @@ function FinancialCommand() {
 
     return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
-            <div className="card" style={{ padding: 32 }}>
+            <div className="card" style={{ padding: 32, background: 'white', borderRadius: 24, border: '1px solid #f1f5f9' }}>
                 <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <DollarSign size={20} color="#4CAF50" />
-                    Calculadora de Punto de Equilibrio
+                    <DollarSign size={20} color="#4CAF50" /> Calculadora Break-even
                 </h3>
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <InputGroup label="Precio de Venta" value={price} onChange={setPrice} sym="$" />
-                    <InputGroup label="Costo del Producto" value={cost} onChange={setCost} sym="$" />
-                    <InputGroup label="Flete Base" value={shipping} onChange={setShipping} sym="$" />
-                    <InputGroup label="% Devolución Estimado" value={returns} onChange={setReturns} sym="%" />
-                </div>
-
-                <div style={{ marginTop: 32, background: '#f8fafc', borderRadius: 20, padding: 24, border: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                        <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>CPA Break-even</span>
-                        <span style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>${breakEvenCPA.toLocaleString()}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>PRECIO VENTA</label>
+                        <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} style={{ padding: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
                     </div>
-                    <p style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
-                        Este es el costo máximo por compra (CPA) que puedes pagar en ads para terminar con exactitud en $0 de utilidad.
-                    </p>
-
-                    <div style={{ height: 1, background: '#e2e8f0', margin: '20px 0' }}></div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Objetivo ROAS (3.0x)</span>
-                            <div style={{ fontSize: 13, fontWeight: 800, color: '#4CAF50' }}>CPA Target: ${Math.round(targetCPA).toLocaleString()}</div>
-                        </div>
-                        <TrendingUp size={24} color="#4CAF50" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>COSTO PRODUCTO</label>
+                        <input type="number" value={cost} onChange={e => setCost(Number(e.target.value))} style={{ padding: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>FLETE BASE</label>
+                        <input type="number" value={shipping} onChange={e => setShipping(Number(e.target.value))} style={{ padding: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>% DEVOLUCIÓN</label>
+                        <input type="number" value={returns} onChange={e => setReturns(Number(e.target.value))} style={{ padding: 12, borderRadius: 12, border: '1px solid #e2e8f0' }} />
+                    </div>
+                </div>
+                <div style={{ marginTop: 24, padding: 20, background: '#f8fafc', borderRadius: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 13, fontWeight: 600 }}>CPA Break-even:</span>
+                        <span style={{ fontSize: 16, fontWeight: 800 }}>${breakEvenCPA.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
+            <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 32, color: 'white' }}>
+                <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Guía de Rentabilidad</h4>
+                <p style={{ fontSize: 13, opacity: 0.7 }}>Para un ROAS de {roasGoal}x, tu CPA no debe superar los ${Math.round(targetCPA).toLocaleString()}.</p>
+            </div>
+        </div>
+    )
+}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div style={{
-                    background: 'white',
-                    borderRadius: 32,
-                    padding: 32,
-                    border: '1px solid #efeff5',
-                    textAlign: 'center'
-                }}>
-                    <BarChart3 size={40} color="#8b5cf6" style={{ marginBottom: 16 }} />
-                    <h4 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a2e' }}>Monitor de Escalabilidad</h4>
-                    <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 8 }}>
-                        Si tienes un ROAS actual de <strong>4.2x</strong>, puedes aumentar tu presupuesto un 20% manteniendo rentabilidad.
-                    </p>
-                </div>
-                {/* Visual indicator of profit margins */}
-                <div style={{ flex: 1, background: '#1a1a2e', borderRadius: 32, padding: 32, color: 'white' }}>
-                    <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>Simulación de Profit Diario</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {[
-                            { label: '5 Ventas', profit: breakEvenCPA * 5 * 0.4 },
-                            { label: '10 Ventas', profit: breakEvenCPA * 10 * 0.4 },
-                            { label: '25 Ventas', profit: breakEvenCPA * 25 * 0.4 },
-                        ].map(s => (
-                            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 12, opacity: 0.6 }}>{s.label}</span>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: '#4CAF50' }}>+${Math.round(s.profit).toLocaleString()}</span>
+function CreativePipeline({ assets, setAssets }: { assets: any[], setAssets: any }) {
+    const COLUMNS = [
+        { id: 'idea', label: 'Ideas / Script', color: '#94a3b8' },
+        { id: 'prod', label: 'En Producción', color: '#3b82f6' },
+        { id: 'review', label: 'Revisión / Edit', color: '#f59e0b' },
+        { id: 'live', label: 'Publicado / Test', color: '#4CAF50' },
+        { id: 'scaling', label: 'Escalando 🔥', color: '#8b5cf6' },
+    ]
+    const [addingTo, setAddingTo] = useState<string | null>(null)
+    const [newTitle, setNewTitle] = useState('')
+    const colOrder = COLUMNS.map(c => c.id)
+
+    const addAssetWithDetails = async (colId: string, platform: string, priority: string, author: string) => {
+        if (!newTitle.trim()) return
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data } = await supabase.from('creative_pipeline').insert({
+            user_id: user.id,
+            title: newTitle,
+            platform,
+            status: colId,
+            priority,
+            author,
+            created_at: new Date().toISOString()
+        }).select().single()
+        if (data) { setAssets([...assets, data]); setNewTitle(''); setAddingTo(null); }
+    }
+
+    const moveAsset = async (id: string, dir: 'left' | 'right') => {
+        const asset = assets.find(a => a.id === id)
+        if (!asset) return
+        const idx = colOrder.indexOf(asset.status)
+        const next = dir === 'right' ? colOrder[idx + 1] : colOrder[idx - 1]
+        if (!next) return
+        const { error } = await supabase.from('creative_pipeline').update({ status: next }).eq('id', id)
+        if (!error) setAssets(assets.map(a => a.id === id ? { ...a, status: next } : a))
+    }
+
+    const deleteAsset = async (id: string) => {
+        const { error } = await supabase.from('creative_pipeline').delete().eq('id', id)
+        if (!error) setAssets(assets.filter(a => a.id !== id))
+    }
+
+    return (
+        <div style={{ display: 'flex', gap: 20, overflowX: 'auto', paddingBottom: 24, paddingRight: 24 }}>
+            {COLUMNS.map(col => (
+                <div key={col.id} style={{ minWidth: 300, flex: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{
+                        background: 'white', borderBottom: `4px solid ${col.color}`, padding: '16px 20px',
+                        borderRadius: '16px 16px 0 0', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                    }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#1a1a2e' }}>{col.label}</span>
+                        <span style={{ background: `${col.color}20`, color: col.color, padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 900 }}>
+                            {assets.filter(a => a.status === col.id).length}
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {assets.filter(a => a.status === col.id).map(asset => (
+                            <div key={asset.id} style={{
+                                background: 'white', padding: 20, borderRadius: 20, border: '1px solid #f1f5f9',
+                                boxShadow: '0 10px 20px rgba(0,0,0,0.02)', position: 'relative', transition: 'transform 0.2s',
+                                cursor: 'pointer'
+                            }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        <span style={{
+                                            fontSize: 9, fontWeight: 900, background: asset.platform === 'TikTok' ? '#000' : asset.platform === 'Meta' ? '#0668E1' : '#f1c40f',
+                                            color: 'white', padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase'
+                                        }}>
+                                            {asset.platform || 'META'}
+                                        </span>
+                                        {asset.priority === 'high' && <span style={{ fontSize: 9, fontWeight: 900, background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: 6 }}>URGENTE</span>}
+                                    </div>
+                                    <button onClick={(e) => { e.stopPropagation(); deleteAsset(asset.id); }} style={{ border: 'none', background: 'none', color: '#ef4444', opacity: 0.3, cursor: 'pointer' }}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+
+                                <h5 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', marginBottom: 8, lineHeight: 1.4 }}>{asset.title}</h5>
+
+                                {asset.author && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#3498db', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                                            {asset.author[0]}
+                                        </div>
+                                        <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{asset.author}</span>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                    {colOrder.indexOf(asset.status) > 0 && (
+                                        <button onClick={(e) => { e.stopPropagation(); moveAsset(asset.id, 'left'); }} style={{ flex: 1, fontSize: 11, padding: '8px', borderRadius: 10, border: '1px solid #f1f5f9', background: '#fafbfc', cursor: 'pointer', fontWeight: 800 }}>←</button>
+                                    )}
+                                    {colOrder.indexOf(asset.status) < colOrder.length - 1 && (
+                                        <button onClick={(e) => { e.stopPropagation(); moveAsset(asset.id, 'right'); }} style={{ flex: 1, fontSize: 11, padding: '8px', borderRadius: 10, background: col.color, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800 }}>AVANZAR →</button>
+                                    )}
+                                </div>
                             </div>
                         ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
 
-function InputGroup({ label, value, onChange, sym }: any) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>{label}</label>
-            <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#cbd5e1' }}>{sym}</span>
-                <input
-                    type="number"
-                    value={value}
-                    onChange={e => onChange(parseFloat(e.target.value))}
-                    style={{
-                        width: '100%',
-                        padding: '12px 14px 12px 32px',
-                        borderRadius: 12,
-                        border: '1px solid #e2e8f0',
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: '#1a1a2e',
-                        outline: 'none'
-                    }}
-                />
-            </div>
-        </div>
-    )
-}
-
-function CreativePipeline() {
-    const columns = [
-        { id: 'idea', label: 'Ideas / Script', color: '#94a3b8', count: 3 },
-        { id: 'prod', label: 'En Producción', color: '#3b82f6', count: 1 },
-        { id: 'review', label: 'Revisión / Edit', color: '#f59e0b', count: 0 },
-        { id: 'live', label: 'Publicado / Test', color: '#4CAF50', count: 5 },
-        { id: 'scaling', label: 'Escalando 🔥', color: '#8b5cf6', count: 1 },
-    ]
-
-    return (
-        <div style={{ display: 'flex', gap: 20, overflowX: 'auto', paddingBottom: 16 }}>
-            {columns.map(col => (
-                <div key={col.id} style={{ minWidth: 260, flex: 1 }}>
-                    <div style={{ borderBottom: `3px solid ${col.color}`, paddingBottom: 12, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: '#1a1a2e' }}>{col.label}</span>
-                        <span style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', background: '#f1f5f9', padding: '2px 8px', borderRadius: 10 }}>{col.count}</span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {col.id === 'idea' && (
-                            <>
-                                <KanbanCard title="Video UGC Comedor" tag="Meta Ads" author="Ana" />
-                                <KanbanCard title="Static Angle: Dolor" tag="TikTok" author="Luis" />
-                            </>
+                        {addingTo === col.id ? (
+                            <div style={{ background: '#f8fafc', padding: 20, borderRadius: 20, border: '2px dashed #e2e8f0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <input
+                                    value={newTitle}
+                                    onChange={e => setNewTitle(e.target.value)}
+                                    placeholder="Nombre del contenido..."
+                                    style={{ padding: 12, borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none' }}
+                                />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <select id={`plat-${col.id}`} style={{ flex: 1, padding: 8, fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                        <option>Meta</option>
+                                        <option>TikTok</option>
+                                        <option>Google</option>
+                                        <option>Organic</option>
+                                    </select>
+                                    <select id={`prio-${col.id}`} style={{ flex: 1, padding: 8, fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                        <option value="medium">Normal</option>
+                                        <option value="high">Alta</option>
+                                        <option value="low">Baja</option>
+                                    </select>
+                                </div>
+                                <input id={`auth-${col.id}`} placeholder="Creador / Autor" style={{ padding: 8, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 11 }} />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button onClick={() => setAddingTo(null)} style={{ flex: 1, padding: 10, borderRadius: 12, border: '1px solid #cbd5e1', background: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>CANCELAR</button>
+                                    <button
+                                        onClick={() => {
+                                            const platform = (document.getElementById(`plat-${col.id}`) as HTMLSelectElement).value
+                                            const priority = (document.getElementById(`prio-${col.id}`) as HTMLSelectElement).value
+                                            const author = (document.getElementById(`auth-${col.id}`) as HTMLInputElement).value
+                                            addAssetWithDetails(col.id, platform, priority, author)
+                                        }}
+                                        style={{ flex: 1, padding: 10, background: col.color, color: 'white', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                    >
+                                        GUARDAR
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setAddingTo(col.id)}
+                                style={{
+                                    padding: '16px', border: '2px dashed #e2e8f0', borderRadius: 20, background: 'rgba(255,255,255,0.5)',
+                                    color: '#94a3b8', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                                }}
+                            >
+                                <Plus size={16} /> Agregar Asset
+                            </button>
                         )}
-                        {col.id === 'scaling' && (
-                            <KanbanCard title="Hook: 'No lo creerás'" tag="Ganador" author="Pixora AI" premium />
-                        )}
-                        <button style={{
-                            padding: 12,
-                            borderRadius: 12,
-                            border: '1px dashed #cbd5e1',
-                            background: 'transparent',
-                            color: '#94a3b8',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6
-                        }}>
-                            <Plus size={14} /> Nuevo Asset
-                        </button>
                     </div>
                 </div>
             ))}
@@ -489,274 +411,69 @@ function CreativePipeline() {
     )
 }
 
-function KanbanCard({ title, tag, author, premium }: any) {
+function AIMarketingAccelerator({ analyses }: { analyses: any[] }) {
+    const [selected, setSelected] = useState('')
     return (
-        <div style={{
-            background: 'white',
-            borderRadius: 16,
-            padding: 16,
-            border: premium ? '1px solid #4CAF5033' : '1px solid #f1f5f9',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-            cursor: 'grab'
-        }}>
-            <h5 style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 12 }}>{title}</h5>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                <span style={{
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: premium ? '#4CAF50' : '#3b82f6',
-                    background: premium ? '#f0faf0' : '#eff6ff',
-                    padding: '3px 8px',
-                    borderRadius: 6
-                }}>
-                    {tag}
-                </span>
-                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{author}</span>
-            </div>
-        </div>
-    )
-}
-
-function AIMarketingAccelerator() {
-    const [products, setProducts] = useState<any[]>([])
-    const [selectedProduct, setSelectedProduct] = useState('')
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        async function fetchProducts() {
-            const { data } = await supabase
-                .from('analyses')
-                .select('id, product_name')
-                .order('created_at', { ascending: false })
-            if (data) setProducts(data)
-            setLoading(false)
-        }
-        fetchProducts()
-    }, [])
-
-    return (
-        <div style={{ maxWidth: 900 }}>
-            <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 32, color: 'white', marginBottom: 32 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <Sparkles size={24} color="#4CAF50" />
-                    <h3 style={{ fontSize: 18, fontWeight: 800 }}>Generador de Copy de Alta Conversión</h3>
-                </div>
-                <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 24 }}>
-                    Elige un producto analizado y generaremos copy publicitario basado en psicología de ventas.
-                </p>
+        <div style={{ maxWidth: 800 }}>
+            <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 32, color: 'white', marginBottom: 24 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Generador de Copy AI</h3>
                 <div style={{ display: 'flex', gap: 12 }}>
-                    <select
-                        value={selectedProduct}
-                        onChange={e => setSelectedProduct(e.target.value)}
-                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px 20px', borderRadius: 12, fontSize: 14 }}
-                    >
-                        <option value="">{loading ? 'Cargando productos...' : 'Seleccionar Producto...'}</option>
-                        {products.map(p => (
-                            <option key={p.id} value={p.id}>{p.product_name || 'Producto sin nombre'}</option>
-                        ))}
+                    <select value={selected} onChange={e => setSelected(e.target.value)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: 12, borderRadius: 12 }}>
+                        <option value="">Seleccionar Producto...</option>
+                        {analyses.map(a => <option key={a.id} value={a.id}>{a.product_name}</option>)}
                     </select>
-                    <button
-                        disabled={!selectedProduct}
-                        style={{
-                            background: selectedProduct ? '#4CAF50' : '#4b5563',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0 24px',
-                            borderRadius: 12,
-                            fontWeight: 700,
-                            fontSize: 13,
-                            cursor: selectedProduct ? 'pointer' : 'not-allowed'
-                        }}
-                    >
-                        GENERAR COPY
-                    </button>
+                    <button style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '0 24px', borderRadius: 12, fontWeight: 700 }}>GENERAR</button>
                 </div>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-                <CopyResultCard type="Facebook Hook" content="¿Cansado de que tus cuchillos no corten? Descubre el afilador usado por profesionales..." />
-                <CopyResultCard type="TikTok Script" content="[ESCENA 1] Muestra el cuchillo sin filo. [TEXTO] 'Mi cocina cambió hoy'..." />
-                <CopyResultCard type="Angle: Ahorro" content="Deja de gastar en cuchillos nuevos. Este afilador te ahorra hasta $500 al año..." />
-            </div>
         </div>
     )
 }
 
-function CopyResultCard({ type, content }: any) {
-    return (
-        <div style={{ background: 'white', borderRadius: 20, padding: 24, border: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 10, fontWeight: 900, background: '#f8fafc', color: '#64748b', padding: '4px 10px', borderRadius: 20 }}>{type}</span>
-                <button style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer' }}><Copy size={14} /></button>
-            </div>
-            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.6, fontWeight: 500 }}>{content}</p>
-        </div>
-    )
-}
-
-function CompetitorSpy() {
-    const [competitors, setCompetitors] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [showForm, setShowForm] = useState(false)
+function CompetitorSpy({ competitors, setCompetitors }: { competitors: any[], setCompetitors: any }) {
     const [newName, setNewName] = useState('')
     const [newUrl, setNewUrl] = useState('')
+    const [showForm, setShowForm] = useState(false)
 
-    useEffect(() => {
-        fetchCompetitors()
-    }, [])
-
-    async function fetchCompetitors() {
-        const { data } = await supabase
-            .from('competitor_monitor')
-            .select('*')
-            .order('created_at', { ascending: false })
-        if (data) setCompetitors(data)
-        setLoading(false)
-    }
-
-    async function addTracker(e: React.FormEvent) {
+    const addTracker = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!newName || !newUrl) return
-
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-
-        const { data, error } = await supabase
-            .from('competitor_monitor')
-            .insert({
-                user_id: user.id,
-                name: newName,
-                url: newUrl,
-                last_status: 'Iniciando monitoreo...',
-                color: '#94a3b8'
-            })
-            .select()
-            .single()
-
-        if (data) {
-            setCompetitors([data, ...competitors])
-            setNewName('')
-            setNewUrl('')
-            setShowForm(false)
-        }
+        const { data } = await supabase.from('competitor_monitor').insert({ user_id: user.id, name: newName, url: newUrl, last_status: 'Activo', color: '#4CAF50' }).select().single()
+        if (data) { setCompetitors([data, ...competitors]); setNewName(''); setNewUrl(''); setShowForm(false); }
     }
 
-    async function deleteTracker(id: string) {
-        const { error } = await supabase
-            .from('competitor_monitor')
-            .delete()
-            .eq('id', id)
-        if (!error) {
-            setCompetitors(competitors.filter(c => c.id !== id))
-        }
+    const deleteTracker = async (id: string) => {
+        const { error } = await supabase.from('competitor_monitor').delete().eq('id', id)
+        if (!error) setCompetitors(competitors.filter(c => c.id !== id))
     }
 
     return (
         <div style={{ maxWidth: 800 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>Monitor de Competencia</h3>
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    style={{
-                        padding: '10px 24px',
-                        borderRadius: 12,
-                        background: showForm ? '#f1f5f9' : '#1a1a2e',
-                        color: showForm ? '#1a1a2e' : 'white',
-                        border: 'none',
-                        fontWeight: 700,
-                        fontSize: 12,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                    }}
-                >
-                    {showForm ? 'CANCELAR' : '+ NUEVO TRACKER'}
-                </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800 }}>Competencia</h3>
+                <button onClick={() => setShowForm(!showForm)} style={{ background: '#1a1a2e', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 12 }}>{showForm ? 'Cancelar' : '+ Nuevo Tracker'}</button>
             </div>
-
             {showForm && (
-                <form onSubmit={addTracker} style={{
-                    background: 'white',
-                    padding: 24,
-                    borderRadius: 20,
-                    border: '1px solid #e2e8f0',
-                    marginBottom: 24,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                    animation: 'slideUp 0.3s ease-out'
-                }}>
-                    <input
-                        value={newName}
-                        onChange={e => setNewName(e.target.value)}
-                        placeholder="Nombre de la Tienda (ej: Tienda Pro Kitchen)"
-                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14 }}
-                    />
-                    <input
-                        value={newUrl}
-                        onChange={e => setNewUrl(e.target.value)}
-                        placeholder="URL de la Tienda (ej: kitchenpro.com)"
-                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14 }}
-                    />
-                    <button type="submit" style={{
-                        padding: '12px',
-                        borderRadius: 12,
-                        background: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                    }}>
-                        ACTIVAR MONITOREO
-                    </button>
+                <form onSubmit={addTracker} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, padding: 24, background: 'white', borderRadius: 24, border: '1px solid #eee' }}>
+                    <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nombre tienda" style={{ padding: 12, borderRadius: 12, border: '1px solid #eee' }} />
+                    <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="URL" style={{ padding: 12, borderRadius: 12, border: '1px solid #eee' }} />
+                    <button type="submit" style={{ background: '#4CAF50', color: 'white', padding: 12, borderRadius: 12, border: 'none', fontWeight: 700 }}>ACTIVAR</button>
                 </form>
             )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {loading ? (
-                    <div style={{ color: '#94a3b8', fontSize: 14 }}>Cargando competidores...</div>
-                ) : competitors.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-                        <Search size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
-                        <p>No tienes tiendas en seguimiento. ¡Agrega una para empezar!</p>
-                    </div>
-                ) : (
-                    competitors.map(comp => (
-                        <div key={comp.id} style={{ background: 'white', borderRadius: 20, padding: 24, border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <div style={{ width: 44, height: 44, background: '#f8fafc', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Search size={20} color="#cbd5e1" />
-                                </div>
-                                <div>
-                                    <h5 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{comp.name}</h5>
-                                    <p style={{ fontSize: 11, color: '#94a3b8' }}>{comp.url}</p>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <span style={{
-                                    fontSize: 11,
-                                    fontWeight: 800,
-                                    color: comp.color || '#94a3b8',
-                                    background: `${comp.color || '#94a3b8'}10`,
-                                    padding: '4px 12px',
-                                    borderRadius: 20
-                                }}>
-                                    {comp.last_status}
-                                </span>
-                                <button
-                                    onClick={() => deleteTracker(comp.id)}
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', opacity: 0.3, cursor: 'pointer' }}
-                                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                                    onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {competitors.map(c => (
+                    <div key={c.id} style={{ background: 'white', padding: 20, borderRadius: 20, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h5 style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</h5>
+                            <p style={{ fontSize: 11, color: '#999' }}>{c.url}</p>
                         </div>
-                    ))
-                )}
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            <span style={{ fontSize: 10, fontWeight: 800, color: c.color, background: `${c.color}10`, padding: '4px 10px', borderRadius: 20 }}>{c.last_status}</span>
+                            <button onClick={() => deleteTracker(c.id)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     )

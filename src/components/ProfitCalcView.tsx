@@ -91,12 +91,21 @@ export default function ProfitCalcView() {
         fetchRecords()
     }, [])
 
-    const [country, setCountry] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('pixora_profit_country') || 'CO'
+    const [country, setCountry] = useState('CO')
+    const [regional, setRegional] = useState<any>(null)
+
+    useEffect(() => {
+        const fetchUserSettings = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+            const { data } = await supabase.from('user_settings').select('regional').eq('user_id', user.id).single()
+            if (data?.regional) {
+                setRegional(data.regional)
+                setCountry(data.regional.country)
+            }
         }
-        return 'CO'
-    })
+        fetchUserSettings()
+    }, [])
 
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
     const [filterEndDate, setFilterEndDate] = useState(new Date().toISOString().split('T')[0])
@@ -104,6 +113,7 @@ export default function ProfitCalcView() {
     const [isSyncing, setIsSyncing] = useState(false)
     const [importLoading, setImportLoading] = useState(false)
     const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
+    const [dbSchemaError, setDbSchemaError] = useState(false)
 
     const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ msg, type })
@@ -203,7 +213,19 @@ export default function ProfitCalcView() {
             }
         } catch (error: any) {
             console.error('Error syncing:', error)
-            showToast('❌ Error al guardar: ' + (error.message || 'revisa la consola'), 'error')
+            // Detect Supabase schema cache errors (missing columns)
+            const isSchemaError = error.message && (
+                error.message.includes('schema cache') ||
+                error.message.includes('tiktok_spend') ||
+                error.message.includes('other_spend') ||
+                error.message.includes('cancel_rate') ||
+                error.code === 'PGRST204'
+            )
+            if (isSchemaError) {
+                setDbSchemaError(true)
+            } else {
+                showToast('❌ Error al guardar: ' + (error.message || 'revisa la consola'), 'error')
+            }
         } finally {
             setIsSyncing(false)
         }
@@ -394,6 +416,44 @@ export default function ProfitCalcView() {
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.3s ease' }}>
 
+            {/* ===== DB SCHEMA ERROR BANNER ===== */}
+            {dbSchemaError && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000,
+                    background: 'linear-gradient(135deg, #7c3aed 0%, #9f1239 100%)',
+                    color: 'white', padding: '16px 24px',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+                    display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap'
+                }}>
+                    <div style={{ flex: 1, minWidth: 280 }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 4 }}>⚠️ Actualización de base de datos requerida</div>
+                        <div style={{ fontSize: 12, opacity: 0.9, lineHeight: 1.5 }}>
+                            Tu tabla <code style={{ background: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: 4 }}>profit_records</code> tiene columnas faltantes.
+                            Ejecuta el archivo <strong>fix_supabase_schema.sql</strong> en el Editor SQL de Supabase para solucionarlo.
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                        <a
+                            href="https://supabase.com/dashboard"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                                background: 'white', color: '#7c3aed',
+                                padding: '8px 16px', borderRadius: 10,
+                                fontSize: 12, fontWeight: 800,
+                                textDecoration: 'none', cursor: 'pointer'
+                            }}
+                        >
+                            → Abrir Supabase SQL Editor
+                        </a>
+                        <button
+                            onClick={() => setDbSchemaError(false)}
+                            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', width: 28, height: 28, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}
+                        >×</button>
+                    </div>
+                </div>
+            )}
+
             {/* ===== TOAST NOTIFICATION ===== */}
             {toast && (
                 <div style={{
@@ -419,7 +479,7 @@ export default function ProfitCalcView() {
                 <div className="profit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 0', flexWrap: 'wrap', gap: 20 }}>
                     <div>
                         <h1 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ background: '#4CAF50', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ background: '#22c55e', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <Activity color="white" size={20} />
                             </div>
                             Control Operativo
@@ -440,7 +500,7 @@ export default function ProfitCalcView() {
                         <button onClick={() => setIsReportsOpen(true)} className="btn-secondary" style={{ height: 40, borderRadius: 10, padding: '0 14px', background: 'white', border: '1px solid #dde', color: '#5b21b6', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <Activity size={14} /> Informes
                         </button>
-                        <button onClick={addRecord} className="btn-primary" style={{ height: 40, borderRadius: 10, padding: '0 16px', fontSize: 11 }}>
+                        <button onClick={addRecord} className="btn-primary" style={{ height: 40, borderRadius: 10, padding: '0 16px', fontSize: 11, background: '#22c55e' }}>
                             <Plus size={16} /> Nuevo
                         </button>
                     </div>
@@ -525,7 +585,7 @@ export default function ProfitCalcView() {
                                     <th style={tableTh}>Util/Prod</th>
                                     <th style={tableTh}>Util Total</th>
                                     <th style={tableTh}>ROI</th>
-                                    <th style={tableTh}></th>
+                                    <th style={tableTh}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -571,10 +631,21 @@ export default function ProfitCalcView() {
                                             <td style={{ ...tableTd, fontWeight: 950, fontSize: 15, color: m.isProfitable ? '#2ecc71' : '#e74c3c' }}>
                                                 {activeCountry.symbol}{m.totalProfit.toLocaleString()}
                                             </td>
-                                            <td style={{ ...tableTd, fontWeight: 800, color: m.roi >= 30 ? '#2ecc71' : '#f39c12' }}>
+                                            <td style={{ ...tableTd, fontWeight: 800, color: m.roi >= 30 ? '#22c55e' : '#f39c12' }}>
                                                 {m.roi}%
                                             </td>
-                                            <td style={tableTd}><ChevronRight size={16} color="#ddd" /></td>
+                                            <td style={tableTd}>
+                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); deleteRecord(r.id); }}
+                                                        style={{ border: 'none', background: '#fff0f0', color: '#e74c3c', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        title="Eliminar Registro"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                    <ChevronRight size={16} color="#ddd" />
+                                                </div>
+                                            </td>
                                         </tr>
                                     )
                                 })}
