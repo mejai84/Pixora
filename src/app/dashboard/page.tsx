@@ -41,6 +41,7 @@ import LogisticsView from '@/components/LogisticsView'
 import QuickCalculatorView from '@/components/QuickCalculatorView'
 import DashboardView from '@/components/DashboardView'
 import MarketingView from '@/components/MarketingView'
+import ProductivityView from '@/components/ProductivityView'
 
 export interface WizardData {
   url: string
@@ -404,6 +405,7 @@ export default function HomePage() {
       case 'simulator': return 'CONTROL DIARIO'
       case 'quick_calc': return 'CALCULADORA EXPRESS'
       case 'settings': return 'AJUSTES DE CUENTA'
+      case 'productivity': return 'HUB DE PRODUCTIVIDAD AI'
       default: return 'PIXORA'
     }
   }
@@ -565,6 +567,8 @@ export default function HomePage() {
             <LogisticsView />
           ) : activeView === 'marketing' ? (
             <MarketingView />
+          ) : activeView === 'productivity' ? (
+            <ProductivityView />
           ) : (activeView === 'banners' || activeView === 'landings') && viewMode === 'grid' ? (
             <div className="main-scroll custom-scrollbar">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
