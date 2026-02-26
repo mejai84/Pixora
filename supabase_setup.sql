@@ -1,3 +1,4 @@
+
 -- Pixora: Tablas de base de datos
 -- Ejecutar en el SQL Editor de Supabase
 
