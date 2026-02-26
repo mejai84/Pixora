@@ -518,6 +518,22 @@ function KanbanCard({ title, tag, author, premium }: any) {
 }
 
 function AIMarketingAccelerator() {
+    const [products, setProducts] = useState<any[]>([])
+    const [selectedProduct, setSelectedProduct] = useState('')
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        async function fetchProducts() {
+            const { data } = await supabase
+                .from('analyses')
+                .select('id, product_name')
+                .order('created_at', { ascending: false })
+            if (data) setProducts(data)
+            setLoading(false)
+        }
+        fetchProducts()
+    }, [])
+
     return (
         <div style={{ maxWidth: 900 }}>
             <div style={{ background: '#1a1a2e', borderRadius: 24, padding: 32, color: 'white', marginBottom: 32 }}>
@@ -529,10 +545,29 @@ function AIMarketingAccelerator() {
                     Elige un producto analizado y generaremos copy publicitario basado en psicología de ventas.
                 </p>
                 <div style={{ display: 'flex', gap: 12 }}>
-                    <select style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px 20px', borderRadius: 12, fontSize: 14 }}>
-                        <option>Seleccionar Producto...</option>
+                    <select
+                        value={selectedProduct}
+                        onChange={e => setSelectedProduct(e.target.value)}
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px 20px', borderRadius: 12, fontSize: 14 }}
+                    >
+                        <option value="">{loading ? 'Cargando productos...' : 'Seleccionar Producto...'}</option>
+                        {products.map(p => (
+                            <option key={p.id} value={p.id}>{p.product_name || 'Producto sin nombre'}</option>
+                        ))}
                     </select>
-                    <button style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '0 24px', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                    <button
+                        disabled={!selectedProduct}
+                        style={{
+                            background: selectedProduct ? '#4CAF50' : '#4b5563',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0 24px',
+                            borderRadius: 12,
+                            fontWeight: 700,
+                            fontSize: 13,
+                            cursor: selectedProduct ? 'pointer' : 'not-allowed'
+                        }}
+                    >
                         GENERAR COPY
                     </button>
                 </div>
@@ -560,39 +595,168 @@ function CopyResultCard({ type, content }: any) {
 }
 
 function CompetitorSpy() {
+    const [competitors, setCompetitors] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [showForm, setShowForm] = useState(false)
+    const [newName, setNewName] = useState('')
+    const [newUrl, setNewUrl] = useState('')
+
+    useEffect(() => {
+        fetchCompetitors()
+    }, [])
+
+    async function fetchCompetitors() {
+        const { data } = await supabase
+            .from('competitor_monitor')
+            .select('*')
+            .order('created_at', { ascending: false })
+        if (data) setCompetitors(data)
+        setLoading(false)
+    }
+
+    async function addTracker(e: React.FormEvent) {
+        e.preventDefault()
+        if (!newName || !newUrl) return
+
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data, error } = await supabase
+            .from('competitor_monitor')
+            .insert({
+                user_id: user.id,
+                name: newName,
+                url: newUrl,
+                last_status: 'Iniciando monitoreo...',
+                color: '#94a3b8'
+            })
+            .select()
+            .single()
+
+        if (data) {
+            setCompetitors([data, ...competitors])
+            setNewName('')
+            setNewUrl('')
+            setShowForm(false)
+        }
+    }
+
+    async function deleteTracker(id: string) {
+        const { error } = await supabase
+            .from('competitor_monitor')
+            .delete()
+            .eq('id', id)
+        if (!error) {
+            setCompetitors(competitors.filter(c => c.id !== id))
+        }
+    }
+
     return (
         <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>Monitor de Competencia</h3>
-                <button className="btn-primary" style={{ padding: '8px 20px', fontSize: 12 }}>+ NUEVO TRACKER</button>
+                <button
+                    onClick={() => setShowForm(!showForm)}
+                    style={{
+                        padding: '10px 24px',
+                        borderRadius: 12,
+                        background: showForm ? '#f1f5f9' : '#1a1a2e',
+                        color: showForm ? '#1a1a2e' : 'white',
+                        border: 'none',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    {showForm ? 'CANCELAR' : '+ NUEVO TRACKER'}
+                </button>
             </div>
+
+            {showForm && (
+                <form onSubmit={addTracker} style={{
+                    background: 'white',
+                    padding: 24,
+                    borderRadius: 20,
+                    border: '1px solid #e2e8f0',
+                    marginBottom: 24,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    animation: 'slideUp 0.3s ease-out'
+                }}>
+                    <input
+                        value={newName}
+                        onChange={e => setNewName(e.target.value)}
+                        placeholder="Nombre de la Tienda (ej: Tienda Pro Kitchen)"
+                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14 }}
+                    />
+                    <input
+                        value={newUrl}
+                        onChange={e => setNewUrl(e.target.value)}
+                        placeholder="URL de la Tienda (ej: kitchenpro.com)"
+                        style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14 }}
+                    />
+                    <button type="submit" style={{
+                        padding: '12px',
+                        borderRadius: 12,
+                        background: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }}>
+                        ACTIVAR MONITOREO
+                    </button>
+                </form>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <CompetitorCard name="Tienda Pro Kitchen" url="kitchen-pro.com" status="Alerta: Precio Bajó" color="#ef4444" />
-                <CompetitorCard name="Gadget Galaxy" url="gadgetgalaxy.co" status="Sin cambios" color="#94a3b8" />
-                <CompetitorCard name="Home Deco Premium" url="homedeco.cl" status="Nuevo Copy Detectado" color="#4CAF50" />
-            </div>
-        </div>
-    )
-}
-
-function CompetitorCard({ name, url, status, color }: any) {
-    return (
-        <div style={{ background: 'white', borderRadius: 20, padding: 24, border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ width: 44, height: 44, background: '#f8fafc', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Search size={20} color="#cbd5e1" />
-                </div>
-                <div>
-                    <h5 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{name}</h5>
-                    <p style={{ fontSize: 11, color: '#94a3b8' }}>{url}</p>
-                </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: color, background: `${color}10`, padding: '4px 12px', borderRadius: 20 }}>
-                    {status}
-                </span>
-                <ChevronRight size={18} color="#cbd5e1" />
+                {loading ? (
+                    <div style={{ color: '#94a3b8', fontSize: 14 }}>Cargando competidores...</div>
+                ) : competitors.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
+                        <Search size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
+                        <p>No tienes tiendas en seguimiento. ¡Agrega una para empezar!</p>
+                    </div>
+                ) : (
+                    competitors.map(comp => (
+                        <div key={comp.id} style={{ background: 'white', borderRadius: 20, padding: 24, border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ width: 44, height: 44, background: '#f8fafc', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Search size={20} color="#cbd5e1" />
+                                </div>
+                                <div>
+                                    <h5 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{comp.name}</h5>
+                                    <p style={{ fontSize: 11, color: '#94a3b8' }}>{comp.url}</p>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <span style={{
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    color: comp.color || '#94a3b8',
+                                    background: `${comp.color || '#94a3b8'}10`,
+                                    padding: '4px 12px',
+                                    borderRadius: 20
+                                }}>
+                                    {comp.last_status}
+                                </span>
+                                <button
+                                    onClick={() => deleteTracker(comp.id)}
+                                    style={{ background: 'none', border: 'none', color: '#ef4444', opacity: 0.3, cursor: 'pointer' }}
+                                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                    onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     )

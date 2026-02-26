@@ -344,6 +344,10 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
 
             {/* Navigation */}
             <nav className="sidebar-nav">
+                {/* Pomodoro Timer Access */}
+                <PomodoroTimer />
+
+                {/* Module items */}
                 {/* Module items */}
                 {moduleItems.map(item => (
                     <button
@@ -384,9 +388,6 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
                     ))
                 )}
             </nav>
-
-            {/* Pomodoro Timer */}
-            <PomodoroTimer />
 
             {/* Bottom section */}
 
