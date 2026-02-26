@@ -109,18 +109,21 @@ export default function MarketingView() {
             impressions: 0,
             clicks: 0,
             conversions: 0,
+            ctr: 0,
+            cpc: 0,
+            cpa: 0,
             status: 'active'
         }
 
         const { data, error } = await supabase
             .from('marketing_spend')
-            .insert(newRecord)
+            .insert([newRecord])
             .select()
             .single()
 
         if (error) {
-            console.error('Error al crear campaña:', error)
-            alert('Error al crear campaña: ' + error.message + '\n\nTIP: Verifica si ejecutaste el SQL en Supabase para crear la tabla "marketing_spend".')
+            console.error('Error al crear gasto:', error)
+            alert('Error al crear gasto: ' + error.message + '\n\nTIP: Asegúrate de haber ejecutado el SQL en Supabase para crear la tabla "marketing_spend".')
         } else if (data) {
             setRecords([data, ...records])
         }
