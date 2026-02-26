@@ -150,6 +150,17 @@ CREATE TABLE IF NOT EXISTS user_products (
     url TEXT
 );
 
+-- 10. USER STORES (Multi-store support)
+CREATE TABLE IF NOT EXISTS user_stores (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    name TEXT NOT NULL,
+    url TEXT,
+    platform TEXT DEFAULT 'shopify',
+    is_active BOOLEAN DEFAULT false
+);
+
 -- 11. MARKETING SPEND (Ad Tracking)
 CREATE TABLE IF NOT EXISTS marketing_spend (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

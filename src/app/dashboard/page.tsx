@@ -505,16 +505,17 @@ export default function HomePage() {
 
       <div className="mac-content">
         {/* Sidebar */}
-        <div className={`${showSidebar ? 'fixed inset-0 flex' : 'hidden'} md:relative md:flex z-50 md:z-20 h-full`}>
+        <div className={`${showSidebar ? 'fixed inset-0 flex' : 'flex'} md:relative z-50 md:z-20 h-full`}>
           {showSidebar && (
             <div
-              className="md:hidden fixed inset-0 bg-black/30"
+              className="md:hidden fixed inset-0 bg-black/30 backdrop-blur-sm"
               style={{ zIndex: -1 }}
               onClick={() => setShowSidebar(false)}
             />
           )}
           <Sidebar
             activeView={activeView}
+            isOpen={showSidebar}
             onViewChange={(v: any) => {
               setActiveView(v);
               setShowSidebar(false);

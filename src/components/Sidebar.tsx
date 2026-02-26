@@ -36,6 +36,7 @@ interface Props {
     onNewAnalysis: () => void
     activeView: string
     onViewChange: (view: string) => void
+    isOpen?: boolean
 }
 
 function formatDate(dateStr: string) {
@@ -43,7 +44,7 @@ function formatDate(dateStr: string) {
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
 }
 
-export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onViewChange }: Props) {
+export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onViewChange, isOpen }: Props) {
     const router = useRouter()
     const [analyses, setAnalyses] = useState<Analysis[]>([])
     const [loading, setLoading] = useState(true)
@@ -187,7 +188,7 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
     ]
 
     return (
-        <aside className="sidebar custom-scrollbar">
+        <aside className={`sidebar custom-scrollbar ${isOpen ? 'open' : ''}`}>
             {/* Logo */}
             <div className="sidebar-logo">
                 <div className="sidebar-logo-icon">

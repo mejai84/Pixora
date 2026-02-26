@@ -160,25 +160,59 @@ export default function MarketingView() {
         }
     }
 
-    const runAiAnalysis = () => {
+    const runAiAnalysis = async () => {
+        if (records.length === 0) {
+            alert('Necesitas tener datos de pauta para analizar.')
+            return
+        }
         setIsAnalyzing(true)
         setAiAnalysis(null)
 
-        // Simulating AI Analysis logic
-        setTimeout(() => {
-            const topPlatform = platformData.sort((a, b) => b.value - a.value)[0]?.name || 'Plataformas'
-            const highCpaCampaign = records.find(r => r.cpa > 15)
+        try {
+            // Try to get keys from DB first
+            const { data: activeConfig } = await supabase
+                .from('user_api_configs')
+                .select('*')
+                .eq('active', true)
+                .maybeSingle()
 
-            let advice = `Basado en tus datos de los últimos 7 días:\n\n`
-            advice += `✅ **Oportunidad en ${topPlatform}:** Es tu canal con mayor volumen. Recomendamos optimizar creativos para bajar el CPC.\n`
-            if (highCpaCampaign) {
-                advice += `⚠️ **Alerta:** La campaña "${highCpaCampaign.campaign_name}" tiene un CPA de $${highCpaCampaign.cpa.toFixed(2)}, que supera tu breakeven. Recomendamos pausar o reducir presupuesto.\n`
+            let apiKeys = {
+                openai: activeConfig?.chatgpt,
+                gemini: activeConfig?.gemini,
+                grok: activeConfig?.grok
             }
-            advice += `📈 **Escalado:** Tienes una tendencia positiva en conversiones. Meta Ads está rindiendo un 15% mejor que la semana pasada.`
 
-            setAiAnalysis(advice)
+            // Fallback to local storage
+            if (!apiKeys.openai && !apiKeys.gemini && !apiKeys.grok) {
+                const keysSaved = localStorage.getItem('pixora_api_keys')
+                const parsed = keysSaved ? JSON.parse(keysSaved) : {}
+                apiKeys = {
+                    openai: parsed.chatgpt,
+                    gemini: parsed.gemini,
+                    grok: parsed.grok
+                }
+            }
+
+            let model = 'openai'
+            if (apiKeys.grok) model = 'grok'
+            else if (apiKeys.gemini) model = 'gemini'
+
+            const res = await fetch('/api/marketing-advice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ records, profitData, model, apiKeys })
+            })
+
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+
+            setAiAnalysis(data.advice)
+        } catch (error: any) {
+            console.error('Error en análisis IA:', error)
+            alert('Error al obtener sugerencias: ' + error.message)
+        } finally {
             setIsAnalyzing(false)
-        }, 2000)
+        }
     }
 
     // Calculations
@@ -265,7 +299,7 @@ export default function MarketingView() {
                             <BrainCircuit size={20} color="#3498db" />
                         </div>
                         <h3 style={{ fontSize: 18, fontWeight: 800 }}>IA Budget Optimizer</h3>
-                        {isAnalyzing && <div className="animate-pulse" style={{ fontSize: 11, background: '#3498db', padding: '2px 8px', borderRadius: 20 }}>Analizando patrones...</div>}
+                        {isAnalyzing && <div style={{ fontSize: 11, background: '#3498db', padding: '2px 8px', borderRadius: 20, animation: 'pulse 1.5s infinite' }}>Analizando patrones...</div>}
                     </div>
 
                     {aiAnalysis ? (
