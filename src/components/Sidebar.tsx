@@ -21,6 +21,7 @@ import {
     LogOut,
     TrendingUp
 } from 'lucide-react'
+import PomodoroTimer from './PomodoroTimer'
 import { supabase, type Analysis } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -383,7 +384,11 @@ export default function Sidebar({ onLoadAnalysis, onNewAnalysis, activeView, onV
                 )}
             </nav>
 
+            {/* Pomodoro Timer */}
+            <PomodoroTimer />
+
             {/* Bottom section */}
+
             <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button
                     onClick={onNewAnalysis}

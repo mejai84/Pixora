@@ -195,21 +195,21 @@ export default function CampaignsView() {
             <div style={{ padding: '24px' }}>
 
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 20 }}>
                     <div>
-                        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <Target className="text-[#3498db]" size={28} /> Seguimiento de Campañas
+                        <h1 style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <Target className="text-[#3498db]" size={26} /> Seguimiento de Campañas
                         </h1>
-                        <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Historial de productos lanzados, proveedores y costos breakeven.</p>
+                        <p style={{ color: '#999', fontSize: 12, marginTop: 4 }}>Historial de productos lanzados, proveedores y costos breakeven.</p>
                     </div>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                        <button className="btn-secondary" style={{ padding: '8px 16px' }}>
+                    <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: '400px', flexWrap: 'wrap' }}>
+                        <button className="btn-secondary" style={{ padding: '10px 16px', flex: 1, minWidth: 120 }}>
                             <Filter size={16} /> Filtrar
                         </button>
                         <button
                             onClick={addRow}
                             className="btn-primary"
-                            style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}
+                            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8, flex: 2, minWidth: 160 }}
                             disabled={isAdding}
                         >
                             {isAdding ? (
@@ -221,6 +221,7 @@ export default function CampaignsView() {
                         </button>
                     </div>
                 </div>
+
 
                 {/* Table Section */}
                 <div style={{

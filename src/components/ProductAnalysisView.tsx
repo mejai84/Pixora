@@ -254,22 +254,40 @@ export default function ProductAnalysisView() {
 
     return (
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ padding: '24px' }}>
-
+            <div style={{ maxWidth: 1400, margin: '0 auto' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 20 }}>
                     <div>
-                        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Search className="text-[#4CAF50]" size={30} /> Análisis de Producto Ganador
+                        <h1 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <Zap className="text-[#f1c40f]" size={28} /> Análisis de Productos Ganadores
                         </h1>
-                        <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Evalúa y valida tus productos bajo criterios técnicos y de competencia.</p>
+                        <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Valida tus productos antes de lanzar campañas.</p>
                     </div>
-                    <button onClick={addProduct} className="btn-primary">
-                        <Plus size={18} /> Nuevo Análisis
-                    </button>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {saveStatus && (
+                            <div style={{ fontSize: 11, fontWeight: 700, color: saveStatus.includes('✓') ? '#2ecc71' : '#94a3b8', background: saveStatus.includes('✓') ? '#f0fff4' : '#f8fafc', padding: '6px 12px', borderRadius: 8, border: '1px solid currentColor' }}>
+                                {saveStatus}
+                            </div>
+                        )}
+                        <button
+                            onClick={handleManualSave}
+                            disabled={isSaving || !activeProduct}
+                            className="btn-secondary"
+                            style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderColor: '#eee' }}
+                        >
+                            <Save size={16} /> {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+                        <button
+                            onClick={addProduct}
+                            className="btn-primary"
+                            style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                            <Plus size={18} /> Nuevo Análisis
+                        </button>
+                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 24 }}>
+                <div className="responsive-grid grid-cols-2-1" style={{ gap: 24 }}>
 
                     {/* Sidebar List */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -331,7 +349,7 @@ export default function ProductAnalysisView() {
 
                             {/* General Data Card */}
                             <div style={{ background: 'white', borderRadius: 16, border: '1px solid #eee', padding: 24 }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20 }}>
                                     <Field label="Nombre del Producto">
                                         <input
                                             value={activeProduct.name}
@@ -354,7 +372,7 @@ export default function ProductAnalysisView() {
                                         />
                                     </Field>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.5fr', gap: 20, marginTop: 16, alignItems: 'end' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginTop: 16, alignItems: 'end' }}>
                                     <Field label="Link del anuncio (TikTok/FB)">
                                         <input
                                             value={activeProduct.adLinks[0]}
@@ -373,12 +391,13 @@ export default function ProductAnalysisView() {
                                             className="input-field" placeholder="$0"
                                         />
                                     </Field>
-                                    <div style={{ display: 'flex', gap: 12 }}>
+                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                         <button
                                             onClick={handleManualSave}
                                             disabled={isSaving}
                                             style={{
                                                 flex: 2,
+                                                minWidth: '160px',
                                                 height: 44,
                                                 background: '#4CAF50',
                                                 color: 'white',
@@ -396,12 +415,13 @@ export default function ProductAnalysisView() {
                                             }}
                                         >
                                             {isSaving ? <Activity size={18} className="animate-spin" /> : <Save size={18} />}
-                                            {saveStatus || 'Guardar Análisis'}
+                                            {saveStatus || 'Guardar'}
                                         </button>
                                         <button
                                             onClick={() => deleteProduct(activeProduct.id)}
                                             style={{
                                                 flex: 1,
+                                                minWidth: '100px',
                                                 height: 44,
                                                 background: '#fff',
                                                 color: '#ef4444',
@@ -416,14 +436,14 @@ export default function ProductAnalysisView() {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            <Trash2 size={16} /> Eliminar
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Triple Column Analysis */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
 
                                 {/* Angles Column */}
                                 <Column title="ANÁLISIS DE ÁNGULOS">

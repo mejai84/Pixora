@@ -413,59 +413,56 @@ export default function ProfitCalcView() {
                     <button onClick={() => setToast(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 24, height: 24, borderRadius: 8, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                 </div>
             )}
-            <div className="profit-padding" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px 40px' }}>
+            <div className="profit-padding" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px 40px' }}>
 
                 {/* Header */}
-                <div className="profit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '32px 0 24px' }}>
+                <div className="profit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 0', flexWrap: 'wrap', gap: 20 }}>
                     <div>
-                        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ background: '#4CAF50', width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Activity color="white" size={24} />
+                        <h1 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ background: '#4CAF50', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Activity color="white" size={20} />
                             </div>
                             Control Operativo
                         </h1>
-                        <p style={{ color: '#999', fontSize: 13, marginTop: 6, fontWeight: 500 }}>
-                            Rentabilidad diaria de campañas • {activeCountry.name} ({activeCountry.currency})
-                        </p>
                     </div>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <div className="card" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="card" style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <Globe size={14} color="#999" />
                             <select value={country} onChange={e => setCountry(e.target.value)} style={{ border: 'none', background: 'none', fontSize: 13, fontWeight: 700, outline: 'none', cursor: 'pointer' }}>
                                 {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                             </select>
                         </div>
-                        <label className="btn-secondary" style={{ height: 44, borderRadius: 12, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: 'white', border: '1px solid #eee' }}>
-                            {importLoading ? <History className="animate-spin" size={16} /> : <Cloud size={16} />}
-                            <span style={{ fontSize: 12, fontWeight: 700 }}>Importar</span>
+                        <label className="btn-secondary" style={{ height: 40, borderRadius: 10, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: 'white', border: '1px solid #eee' }}>
+                            {importLoading ? <History className="animate-spin" size={14} /> : <Cloud size={14} />}
+                            <span style={{ fontSize: 11, fontWeight: 700 }}>Importar</span>
                             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} style={{ display: 'none' }} />
                         </label>
-                        <button onClick={() => setIsReportsOpen(true)} className="btn-secondary" style={{ height: 44, borderRadius: 12, padding: '0 20px', background: 'white', border: '1px solid #dde', color: '#5b21b6', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Activity size={16} /> Informes
+                        <button onClick={() => setIsReportsOpen(true)} className="btn-secondary" style={{ height: 40, borderRadius: 10, padding: '0 14px', background: 'white', border: '1px solid #dde', color: '#5b21b6', fontWeight: 800, fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Activity size={14} /> Informes
                         </button>
-                        <button onClick={addRecord} className="btn-primary" style={{ height: 44, borderRadius: 12, padding: '0 20px', boxShadow: '0 10px 20px rgba(76, 175, 80, 0.2)' }}>
-                            <Plus size={18} /> Nuevo Costeo
+                        <button onClick={addRecord} className="btn-primary" style={{ height: 40, borderRadius: 10, padding: '0 16px', fontSize: 11 }}>
+                            <Plus size={16} /> Nuevo
                         </button>
                     </div>
                 </div>
 
                 {/* History Table — main content */}
-                <div className="card" style={{ padding: 0, borderRadius: 28, overflow: 'hidden', border: 'none', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                <div className="card" style={{ padding: 0, borderRadius: 24, overflow: 'hidden', border: 'none', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
                     {/* Table Header */}
-                    <div className="table-header-flex" style={{ padding: '20px 32px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc', flexWrap: 'wrap', gap: 12 }}>
-                        <div>
-                            <h3 style={{ fontSize: 16, fontWeight: 900, color: '#1a1a2e' }}>HISTORIAL DE OPERACIONES</h3>
-                            <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginTop: 4 }}>
-                                {dayRecords.length} registros para el periodo • Haz clic en una fila para editar
+                    <div className="table-header-flex" style={{ padding: '20px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfc', flexWrap: 'wrap', gap: 16 }}>
+                        <div style={{ minWidth: 200 }}>
+                            <h3 style={{ fontSize: 13, fontWeight: 900, color: '#1a1a2e' }}>HISTORIAL DE OPERACIONES</h3>
+                            <p style={{ fontSize: 10, color: '#999', fontWeight: 600, marginTop: 2 }}>
+                                {dayRecords.length} registros para el periodo
                             </p>
                         </div>
-                        <div className="table-header-kpi" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="table-header-kpi" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
                             {/* Date range filter */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f8f8fc', borderRadius: 14, padding: '6px 10px', border: '1px solid #eee' }}>
-                                <Calendar size={13} color="#999" />
-                                <div style={{ display: 'flex', background: '#ededf3', borderRadius: 8, overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8f8fc', borderRadius: 12, padding: '4px 8px', border: '1px solid #eee', flexWrap: 'wrap' }}>
+                                <Calendar size={12} color="#999" />
+                                <div style={{ display: 'flex', background: '#ededf3', borderRadius: 6, overflow: 'hidden' }}>
                                     {([['day', 'Día'], ['range', 'Rango']] as const).map(([v, label]) => (
-                                        <button key={v} onClick={() => setFilterMode(v)} style={{ padding: '4px 10px', fontSize: 10, fontWeight: 800, border: 'none', cursor: 'pointer', background: filterMode === v ? '#1a1a2e' : 'transparent', color: filterMode === v ? 'white' : '#888', transition: 'all 0.2s' }}>
+                                        <button key={v} onClick={() => setFilterMode(v)} style={{ padding: '3px 8px', fontSize: 9, fontWeight: 800, border: 'none', cursor: 'pointer', background: filterMode === v ? '#1a1a2e' : 'transparent', color: filterMode === v ? 'white' : '#888', transition: 'all 0.2s' }}>
                                             {label}
                                         </button>
                                     ))}
@@ -473,43 +470,46 @@ export default function ProfitCalcView() {
                                 <input
                                     type="date" value={filterDate}
                                     onChange={e => setFilterDate(e.target.value)}
-                                    style={{ border: 'none', background: 'transparent', fontSize: 12, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer' }}
+                                    style={{ border: 'none', background: 'transparent', fontSize: 11, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer', width: 110 }}
                                 />
                                 {filterMode === 'range' && (
                                     <>
-                                        <span style={{ color: '#ccc', fontSize: 12, fontWeight: 700 }}>→</span>
+                                        <span style={{ color: '#ccc', fontSize: 11, fontWeight: 700 }}>→</span>
                                         <input
                                             type="date" value={filterEndDate}
                                             onChange={e => setFilterEndDate(e.target.value)}
-                                            style={{ border: 'none', background: 'transparent', fontSize: 12, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer' }}
+                                            style={{ border: 'none', background: 'transparent', fontSize: 11, fontWeight: 700, outline: 'none', color: '#1a1a2e', cursor: 'pointer', width: 110 }}
                                         />
                                     </>
                                 )}
                             </div>
                             {/* Utilidad Total */}
-                            <div style={{ textAlign: 'right', borderLeft: '1px solid #eee', paddingLeft: 16 }}>
-                                <span style={{ fontSize: 9, fontWeight: 900, color: '#999', textTransform: 'uppercase', display: 'block' }}>Utilidad Total</span>
-                                <div style={{ fontSize: 22, fontWeight: 950, color: dayProfit >= 0 ? '#2ecc71' : '#e74c3c', marginTop: 2 }}>
+                            <div style={{ textAlign: 'right', borderLeft: '1px solid #eee', paddingLeft: 12 }}>
+                                <span style={{ fontSize: 8, fontWeight: 900, color: '#999', textTransform: 'uppercase', display: 'block' }}>Utilidad</span>
+                                <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 950, color: dayProfit >= 0 ? '#2ecc71' : '#e74c3c' }}>
                                     {activeCountry.symbol}{dayProfit.toLocaleString()}
                                 </div>
                             </div>
-                            <button onClick={clearHistory} style={{ background: 'white', border: '1px solid #ffeaea', color: '#e74c3c', padding: '10px 16px', borderRadius: 12, fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <Trash2 size={14} /> Borrar todo
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const h = ['Producto', 'Fecha', 'Tipo', 'Ventas', 'Efectivas', 'Ads', 'CPA', 'Flete', 'Costo', 'Utilidad', 'ROI']
-                                    const rows = dayRecords.map(r => { const m = calculateMetrics(r); return [r.productName, r.date, r.type, r.shopifySales, m.effectiveSales, m.totalAdSpend, m.cpa, m.fleteConDev, r.productCost, m.totalProfit, m.roi].join(',') })
-                                    const blob = new Blob([[h.join(','), ...rows].join('\n')], { type: 'text/csv' })
-                                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `costeo_${filterDate}.csv`; a.click()
-                                }}
-                                className="btn-secondary"
-                                style={{ background: 'white', border: '1px solid #eee', fontSize: 11, fontWeight: 700 }}
-                            >
-                                <Cloud size={14} /> CSV
-                            </button>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={clearHistory} style={{ background: 'white', border: '1px solid #ffeaea', color: '#e74c3c', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Trash2 size={14} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const h = ['Producto', 'Fecha', 'Tipo', 'Ventas', 'Efectivas', 'Ads', 'CPA', 'Flete', 'Costo', 'Utilidad', 'ROI']
+                                        const rows = dayRecords.map(r => { const m = calculateMetrics(r); return [r.productName, r.date, r.type, r.shopifySales, m.effectiveSales, m.totalAdSpend, m.cpa, m.fleteConDev, r.productCost, m.totalProfit, m.roi].join(',') })
+                                        const blob = new Blob([[h.join(','), ...rows].join('\n')], { type: 'text/csv' })
+                                        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `costeo_${filterDate}.csv`; a.click()
+                                    }}
+                                    className="btn-secondary"
+                                    style={{ background: 'white', border: '1px solid #eee', width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                                >
+                                    <Cloud size={14} />
+                                </button>
+                            </div>
                         </div>
                     </div>
+
 
                     {/* Table */}
                     <div style={{ overflowX: 'auto' }} className="custom-scrollbar">

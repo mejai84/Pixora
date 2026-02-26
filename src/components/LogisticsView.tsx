@@ -221,7 +221,7 @@ function Menu({ onUpload, onHistory }: any) {
             </div>
             <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1a1a2e', marginBottom: 8 }}>Auditor Logístico</h1>
             <p style={{ color: '#999', fontSize: 14, marginBottom: 48 }}>Analiza tus reportes de Dropi e identifica oportunidades para reducir devoluciones</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            <div className="responsive-grid" style={{ gap: 24 }}>
                 {[
                     { title: 'Subir Reporte', desc: 'Carga tu Excel de Dropi', icon: <Upload color={ORANGE} size={28} />, action: onUpload, color: ORANGE },
                     { title: 'Diario de Pauta', desc: 'Próximamente', icon: <Calendar color="#5b21b6" size={28} />, action: null, color: '#5b21b6' },
@@ -281,25 +281,28 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
     return (
         <div style={{ padding: '24px 32px 60px' }}>
             {/* Toolbar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button onClick={onBack} style={{ width: 38, height: 38, background: '#f5f5f5', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
                     <div>
-                        <h1 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>Análisis de Informe Real</h1>
-                        <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                            <FileText size={11} />{fileName}
+                        <h1 style={{ fontSize: 18, fontWeight: 900, color: '#1a1a2e' }}>Análisis Logístico</h1>
+                        <div style={{ fontSize: 10, color: '#999', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            <FileText size={11} />{fileName.slice(0, 30)}{fileName.length > 30 ? '...' : ''}
                         </div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={onUpload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: ORANGE, color: 'white', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
-                        <Upload size={14} /> Cargar Nuevo
+                    <button onClick={onUpload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: ORANGE, color: 'white', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>
+                        <Upload size={14} /> Nuevo
+                    </button>
+                    <button onClick={onBack} className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'white', border: '1px solid #eee', borderRadius: 12, fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>
+                        <History size={14} /> Historial
                     </button>
                 </div>
             </div>
 
             {/* KPI Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
                 {[
                     { label: 'Total Pedidos', val: s.totalOrders, icon: <Package size={16} />, color: '#1a1a2e' },
                     { label: 'Total Guías', val: s.guiasGeneradas, icon: <FileText size={16} />, color: '#3498db' },
@@ -323,9 +326,9 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                 <h3 style={{ fontSize: 12, fontWeight: 800, opacity: 0.85, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                     💰 Finanzas Reales — Entregados
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
+                <div className="responsive-grid grid-cols-2-1" style={{ gap: 24 }}>
                     <div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16, marginBottom: 16 }}>
                             {[
                                 { l: 'Ventas Totales (+)', v: s.ventasBrutas },
                                 { l: 'Costo Prov. (-)', v: s.costoProveedor },
@@ -345,7 +348,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                         {/* Proyección tránsito */}
                         <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: '12px 16px' }}>
                             <div style={{ fontSize: 10, fontWeight: 800, opacity: 0.8, marginBottom: 10 }}>📦 Proyección de lo que viene en Tránsito — ${s.transitoTotalVal.toLocaleString()}</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8 }}>
                                 {[1, 0.9, 0.8, 0.7, 0.6].map(r => (
                                     <div key={r} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
                                         <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.75 }}>Si entrega {r * 100}%</div>
@@ -373,7 +376,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
             </div>
 
             {/* Efficiency Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 24 }}>
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
                 {[
                     { label: 'Efectividad Entrega', val: `${delivRate}%`, icon: <CheckCircle2 size={20} />, color: '#27ae60', type: 'delivery' as ModalType },
                     { label: 'En Tránsito Global', val: `${transitRate}%`, icon: <Truck size={20} />, color: '#3498db', type: 'transit' as ModalType },
@@ -390,7 +393,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
             </div>
 
             {/* Status Cards Row 1 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 12 }}>
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 12 }}>
                 {statusCards1.map(c => (
                     <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.detail)} style={{ padding: '16px', cursor: 'pointer', borderBottom: `3px solid ${c.color}` }}>
                         <div style={{ fontSize: 9, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{c.label}</div>
@@ -401,7 +404,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
             </div>
 
             {/* Status Cards Row 2 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 32 }}>
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 32 }}>
                 {statusCards2.map(c => (
                     <div key={c.label} className="card shadow-hover" onClick={() => onDetail(c.detail)} style={{ padding: '16px', cursor: 'pointer', borderBottom: `3px solid ${c.color}` }}>
                         <div style={{ fontSize: 9, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 6 }}>{c.label}</div>

@@ -103,12 +103,12 @@ export default function OperationsView() {
             <div style={{ padding: '24px' }}>
 
                 {/* Header */}
-                <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
                     <div>
-                        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Activity className="text-[#9b59b6]" size={30} /> Análisis de Operación
+                        <h1 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <Activity className="text-[#9b59b6]" size={28} /> Análisis Operativo
                         </h1>
-                        <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Visión estratégica de tu negocio: Ventas, testing y retrospección.</p>
+                        <p style={{ color: '#999', fontSize: 12, marginTop: 4 }}>Visión estratégica: Ventas, testing y retrospección.</p>
                     </div>
                     <button
                         onClick={async () => {
@@ -143,13 +143,14 @@ export default function OperationsView() {
                             setRetrospective('')
                             alert('Análisis limpiado')
                         }}
-                        style={{ background: 'white', border: '1px solid #ffeaea', color: '#e74c3c', padding: '8px 16px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                        style={{ background: 'white', border: '1px solid #ffeaea', color: '#e74c3c', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                     >
                         <Trash2 size={14} /> Borrar Análisis
                     </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 32 }}>
+                <div className="responsive-grid grid-cols-2-1" style={{ gap: 'clamp(16px, 4vw, 32px)' }}>
+
 
                     {/* Left Column: Questionnaire and Product Discovery */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -227,7 +228,7 @@ export default function OperationsView() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
                         {/* Summary Cards */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                             <MetricCard
                                 label="FACTURADO A LA FECHA"
                                 value={`$${stats.totalInvoiced.toLocaleString()}`}
@@ -238,7 +239,7 @@ export default function OperationsView() {
                                 label="PEDIDOS TOTALES"
                                 value={stats.salesCount}
                                 icon={<ShoppingCart size={18} color="#3498db" />}
-                                onEdit={(v) => { const n = { ...stats, sales_count: v }; setStats(n); syncOps({ sales_count: v }) }}
+                                onEdit={(v) => { const n = { ...stats, salesCount: v }; setStats(n); syncOps({ sales_count: v }) }}
                             />
                             <MetricCard
                                 label="INVERSIÓN EN TEST"
@@ -256,7 +257,7 @@ export default function OperationsView() {
                         </div>
 
                         {/* Testing Breakdown */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
                             <div style={{ background: 'white', padding: 20, borderRadius: 16, border: '1px solid #eee' }}>
                                 <span style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>TESTEOS TIKTOK</span>
                                 <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>{stats.testeosTikTok}</div>

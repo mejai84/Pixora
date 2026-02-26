@@ -150,9 +150,9 @@ export default function DashboardView() {
             <div className="dashboard-padding" style={{ padding: '32px' }}>
 
                 {/* Welcome Header */}
-                <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40 }}>
-                    <div>
-                        <h1 style={{ fontSize: 32, fontWeight: 900, color: '#1a1a2e', letterSpacing: '-0.02em' }}>
+                <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ flex: '1 1 300px' }}>
+                        <h1 style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 900, color: '#1a1a2e', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                             ¡Buen día, {userName}! 👋
                         </h1>
                         <p style={{ color: '#94a3b8', fontSize: 14, marginTop: 4, fontWeight: 500 }}>
@@ -167,7 +167,12 @@ export default function DashboardView() {
                 </div>
 
                 {/* Primary KPIs - Dashboard Style */}
-                <div className="dashboard-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 32 }}>
+                <div className="responsive-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 16,
+                    marginBottom: 32
+                }}>
                     <KPICard
                         label="Utilidad Real"
                         value={`${activeCountry.symbol}${totals.profit.toLocaleString()}`}
@@ -203,7 +208,7 @@ export default function DashboardView() {
                 </div>
 
                 {/* Main section: Control Total Style */}
-                <div className="dashboard-grid-main" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 24, marginBottom: 32 }}>
+                <div className="responsive-grid grid-cols-2-1" style={{ marginBottom: 32 }}>
 
                     {/* Control Total Breakdown */}
                     <div style={{
@@ -228,7 +233,7 @@ export default function DashboardView() {
                                 <span style={{ fontSize: 11, fontWeight: 800, color: '#22c55e', background: '#f0fdf4', padding: '4px 12px', borderRadius: 20 }}>Auditoría Activa 🟢</span>
                             </div>
 
-                            <div className="operative-breakdown-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
+                            <div className="operative-breakdown-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                                     <DetailRow label="Facturación Bruta" value={`${activeCountry.symbol}${totals.revenue.toLocaleString()}`} icon={<DollarSign size={14} />} />
                                     <DetailRow label="Costo de Mercancía" value={`${activeCountry.symbol}${(totals.sales * 35000).toLocaleString()}`} icon={<ShoppingCart size={14} />} />
@@ -295,7 +300,7 @@ export default function DashboardView() {
                 </div>
 
                 {/* Bottom Quick Actions / Feature Cards */}
-                <div className="dashboard-grid-bottom" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+                <div className="responsive-grid grid-cols-3" style={{ marginBottom: 32 }}>
                     <ActionCard
                         title="Auditoría de Fletes"
                         desc="Cruza tus guías con las transportadoras para evitar cobros fantasmas."

@@ -249,70 +249,68 @@ export default function MarketingView() {
         <div className="main-scroll custom-scrollbar" style={{ animation: 'fadeIn 0.2s ease', padding: '24px' }}>
 
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <div className="marketing-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 20 }}>
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ background: '#3498db', width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(52, 152, 219, 0.2)' }}>
-                            <Target color="white" size={24} />
+                    <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ background: '#5b21b6', width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Target color="white" size={20} />
                         </div>
-                        Pauta & Marketing PRO
+                        Pauta & Marketing
                     </h1>
-                    <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 6, fontWeight: 500 }}>Inteligencia publicitaria y control de rentabilidad total.</p>
+                    <p style={{ color: '#999', fontSize: 12, marginTop: 4, fontWeight: 500 }}>Optimización de presupuesto y ROAS real</p>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <button onClick={() => setShowSimulator(true)} className="btn-secondary" style={{ background: 'white', border: '1px solid #e2e8f0' }}>
-                        <Rocket size={16} /> Simulador Escala
-                    </button>
-                    <button onClick={addRecord} className="btn-primary" style={{ background: '#3498db', boxShadow: '0 8px 20px rgba(52, 152, 219, 0.2)' }} disabled={isAdding}>
-                        <Plus size={18} /> {isAdding ? 'Creando...' : 'Nueva Campaña'}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <button onClick={addRecord} className="btn-primary" style={{ height: 40, borderRadius: 10, padding: '0 16px', fontSize: 12 }}>
+                        <Plus size={16} /> {isAdding ? 'Creando...' : 'Agregar Gasto'}
                     </button>
                 </div>
             </div>
 
             {/* KPI Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 32 }}>
-                {[
-                    { label: 'Gasto Total', value: `$${totalSpend.toLocaleString()}`, icon: <TrendingUp size={18} />, color: '#3498db' },
-                    { label: 'ROAS Real', value: `${roasReal.toFixed(2)}x`, icon: <Zap size={18} />, color: '#f1c40f', sub: `$${totalSales.toLocaleString()} en ventas` },
-                    { label: 'CPA Promedio', value: `$${avgCPA.toFixed(2)}`, icon: <Target size={18} />, color: '#e74c3c' },
-                    { label: 'Conversiones', value: totalConversions.toLocaleString(), icon: <TrendingUp size={18} />, color: '#2ecc71' },
-                ].map((kpi, i) => (
-                    <div key={i} className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 8, border: 'none', background: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>{kpi.label}</span>
-                            <div style={{ color: kpi.color, opacity: 0.8 }}>{kpi.icon}</div>
-                        </div>
-                        <div style={{ fontSize: 24, fontWeight: 900, color: '#1a1a2e' }}>{kpi.value}</div>
-                        {kpi.sub && <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{kpi.sub}</div>}
-                    </div>
-                ))}
+            <div className="responsive-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+                <div className="card" style={{ padding: 20, border: 'none', background: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)', color: 'white' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>Inversión Total</div>
+                    <div style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 900 }}>${totalSpend.toLocaleString()}</div>
+                </div>
+                <div className="card" style={{ padding: 20, border: 'none', background: 'white' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>ROAS Promedio</div>
+                    <div style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 900, color: roasReal >= 2 ? '#22c55e' : '#f59e0b' }}>{roasReal.toFixed(2)}x</div>
+                </div>
+                <div className="card" style={{ padding: 20, border: 'none', background: 'white' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>Ventas (Shopify)</div>
+                    <div style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 900, color: '#1a1a2e' }}>${totalSales.toLocaleString()}</div>
+                </div>
+                <div className="card" style={{ padding: 20, border: 'none', background: 'white' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>Contribución Marketing</div>
+                    <div style={{ fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: 900, color: '#1a1a2e' }}>{totalSales > 0 ? ((totalSpend / totalSales) * 100).toFixed(1) : 0}%</div>
+                </div>
             </div>
 
             {/* AI Optimizer Section */}
-            <div className="card" style={{ padding: 24, marginBottom: 32, background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
+            <div className="card" style={{ padding: 'clamp(16px, 4vw, 24px)', marginBottom: 32, background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', color: 'white', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', right: -20, top: -20, opacity: 0.1 }}>
                     <BrainCircuit size={150} />
                 </div>
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                         <div style={{ background: 'rgba(52, 152, 219, 0.2)', padding: 10, borderRadius: 12 }}>
                             <BrainCircuit size={20} color="#3498db" />
                         </div>
-                        <h3 style={{ fontSize: 18, fontWeight: 800 }}>IA Budget Optimizer</h3>
+                        <h3 style={{ fontSize: 'clamp(1rem, 4vw, 1.125rem)', fontWeight: 800 }}>IA Budget Optimizer</h3>
                         {isAnalyzing && <div style={{ fontSize: 11, background: '#3498db', padding: '2px 8px', borderRadius: 20, animation: 'pulse 1.5s infinite' }}>Analizando patrones...</div>}
                     </div>
 
                     {aiAnalysis ? (
-                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 20, borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: 20, borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                             {aiAnalysis.split('\n').map((line, i) => (
                                 <p key={i} style={{ marginBottom: 8 }}>{line}</p>
                             ))}
                             <button onClick={() => setAiAnalysis(null)} style={{ marginTop: 12, fontSize: 11, background: 'none', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '4px 12px', borderRadius: 8, cursor: 'pointer' }}>Limpiar</button>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <p style={{ color: '#94a3b8', maxWidth: 500, fontSize: 14 }}>Deja que nuestra IA analice tus campañas, identifique fugas de dinero y te sugiera dónde escalar hoy mismo.</p>
-                            <button onClick={runAiAnalysis} disabled={isAnalyzing} style={{ background: '#3498db', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+                            <p style={{ color: '#94a3b8', maxWidth: 500, fontSize: 13 }}>Deja que nuestra IA analice tus campañas, identifique fugas de dinero y te sugiera dónde escalar hoy mismo.</p>
+                            <button onClick={runAiAnalysis} disabled={isAnalyzing} style={{ background: '#3498db', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: 'fit-content' }}>
                                 <Zap size={16} /> {isAnalyzing ? 'Calculando...' : 'Obtener Sugerencias IA'}
                             </button>
                         </div>
@@ -321,48 +319,50 @@ export default function MarketingView() {
             </div>
 
             {/* Main Content: Charts */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, marginBottom: 32 }}>
-                <div className="card" style={{ padding: 24, height: 400 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="responsive-grid grid-cols-2-1" style={{ gap: 24, marginBottom: 32 }}>
+                <div className="card" style={{ padding: 'clamp(16px, 4vw, 24px)', minHeight: 400 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+                        <h3 style={{ fontSize: 14, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', gap: 8 }}>
                             <TrendingUp size={16} color="#3498db" /> Rendimiento & ROAS Real
                         </h3>
                         <div style={{ display: 'flex', gap: 16 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3498db' }} />
-                                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>GASTO</span>
+                                <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700 }}>GASTO</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f1c40f' }} />
-                                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>VENTAS</span>
+                                <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700 }}>VENTAS</span>
                             </div>
                         </div>
                     </div>
-                    <ResponsiveContainer width="100%" height="80%">
-                        <AreaChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorGasto" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3498db" stopOpacity={0.1} />
-                                    <stop offset="95%" stopColor="#3498db" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                            <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-                            <Area type="monotone" dataKey="gasto" stroke="#3498db" strokeWidth={3} fillOpacity={1} fill="url(#colorGasto)" name="Inversión ($)" />
-                            <Area type="monotone" dataKey="ventas" stroke="#f1c40f" strokeWidth={3} fillOpacity={0} name="Ventas ($)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
+                    <div style={{ height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorGasto" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3498db" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#3498db" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 600 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                                <Area type="monotone" dataKey="gasto" stroke="#3498db" strokeWidth={3} fillOpacity={1} fill="url(#colorGasto)" name="Inversión ($)" />
+                                <Area type="monotone" dataKey="ventas" stroke="#f1c40f" strokeWidth={3} fillOpacity={0} name="Ventas ($)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
-                <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column' }}>
-                    <h1 style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e', marginBottom: 20 }}>Eficiencia de Cuenta</h1>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ResponsiveContainer width="100%" height={260}>
+                <div className="card" style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column' }}>
+                    <h1 style={{ fontSize: 14, fontWeight: 800, color: '#1a1a2e', marginBottom: 20 }}>Eficiencia de Cuenta</h1>
+                    <div style={{ height: 260 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={platformData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700 }} />
                                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none' }} />
                                 <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Gasto ($)">
                                     {platformData.map((entry, index) => (
@@ -374,16 +374,17 @@ export default function MarketingView() {
                     </div>
                     <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #f1f5f9' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                            <span style={{ fontSize: 12, color: '#94a3b8' }}>CPC Promedio</span>
-                            <span style={{ fontSize: 12, fontWeight: 700 }}>${(totalSpend / Math.max(1, records.reduce((a, r) => a + r.clicks, 0))).toFixed(2)}</span>
+                            <span style={{ fontSize: 11, color: '#94a3b8' }}>CPC Promedio</span>
+                            <span style={{ fontSize: 11, fontWeight: 700 }}>${(totalSpend / Math.max(1, records.reduce((a, r) => a + r.clicks, 0))).toFixed(2)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: 12, color: '#94a3b8' }}>CTR Global</span>
-                            <span style={{ fontSize: 12, fontWeight: 700 }}>{(records.reduce((a, r) => a + r.clicks, 0) / Math.max(1, records.reduce((a, r) => a + r.impressions, 0)) * 100).toFixed(2)}%</span>
+                            <span style={{ fontSize: 11, color: '#94a3b8' }}>CTR Global</span>
+                            <span style={{ fontSize: 11, fontWeight: 700 }}>{(records.reduce((a, r) => a + r.clicks, 0) / Math.max(1, records.reduce((a, r) => a + r.impressions, 0)) * 100).toFixed(2)}%</span>
                         </div>
                     </div>
                 </div>
             </div>
+
 
             {/* Table Section */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>

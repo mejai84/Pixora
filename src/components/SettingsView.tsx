@@ -371,7 +371,7 @@ export default function SettingsView() {
             <div style={{ maxWidth: 860, margin: '0 auto' }}>
 
                 {/* Profile Header */}
-                <SectionCard style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
+                <SectionCard style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                     <div style={{
                         width: 72, height: 72, borderRadius: '50%', background: '#f5f5f5',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -386,7 +386,7 @@ export default function SettingsView() {
                             <Camera size={11} color="white" />
                         </div>
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#333' }}>{profile.displayName}</h2>
                         <span style={{
                             fontSize: 10, fontWeight: 700, color: '#4CAF50', textTransform: 'uppercase' as const,
@@ -396,7 +396,7 @@ export default function SettingsView() {
                         <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{profile.email}</p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
                         {[
                             { icon: Settings, label: 'Config. General', tab: 'profile' },
                             { icon: Shield, label: 'Seguridad', tab: 'integrations' },
@@ -459,7 +459,7 @@ export default function SettingsView() {
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Store size={16} color="#4CAF50" /> Información del Negocio
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 16 }}>
                                 <div>
                                     <Label>Nombre del Negocio</Label>
                                     <input
@@ -514,7 +514,7 @@ export default function SettingsView() {
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Mail size={16} color="#4CAF50" /> Datos de Contacto
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                                 <div>
                                     <Label>Email</Label>
                                     <div style={{ position: 'relative' }}>
@@ -547,7 +547,7 @@ export default function SettingsView() {
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Link size={16} color="#4CAF50" /> Redes Sociales
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                                 {[
                                     { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: '@mitienda' },
                                     { key: 'facebook', label: 'Facebook', icon: '📘', placeholder: 'mitienda.oficial' },
@@ -571,7 +571,7 @@ export default function SettingsView() {
                             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <Clock size={16} color="#4CAF50" /> Preferencias Regionales
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                                 <div>
                                     <Label>Zona Horaria</Label>
                                     <select value={profile.timezone} onChange={e => setProfile({ ...profile, timezone: e.target.value })} className="input-field">
@@ -632,7 +632,7 @@ export default function SettingsView() {
                                     <Globe size={16} color="#4CAF50" /> Configuración Regional
                                 </h3>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                                 <div>
                                     <Label>País de Operación</Label>
                                     <select
