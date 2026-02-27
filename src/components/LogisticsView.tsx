@@ -1,10 +1,11 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
 import * as XLSX from 'xlsx'
-import { Truck, Upload, Calendar, History, X, CheckCircle2, XCircle, Clock, Activity, Save, Search, Download, Loader2, Trash2, Package, FileText, AlertCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { Truck, Upload, Calendar, History, X, CheckCircle2, XCircle, Clock, Activity, Save, Search, Download, Loader2, Trash2, Package, FileText, AlertCircle, ChevronRight, RefreshCw, BarChart as ChartIcon, Filter } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
 import { supabase } from '@/lib/supabase'
 
-type SubView = 'menu' | 'dashboard' | 'history' | 'detail'
+type SubView = 'menu' | 'dashboard' | 'history' | 'detail' | 'pauta'
 type ModalType = 'delivery' | 'transit' | 'returns' | null
 
 interface OrderData {
@@ -60,6 +61,7 @@ export default function LogisticsView() {
     const [detailFilter, setDetailFilter] = useState<'all' | 'con_recaudo' | 'sin_recaudo'>('all')
     const [productPauta, setProductPauta] = useState<Record<string, number>>({})
     const [carrierDetail, setCarrierDetail] = useState<string | null>(null)
+    const [selectedProduct, setSelectedProduct] = useState<{ name: string; stats: any } | null>(null)
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
@@ -214,19 +216,29 @@ export default function LogisticsView() {
             )}
 
             {isLoading ? <LoadingSpinner /> :
-                subView === 'menu' ? <Menu onUpload={() => fileRef.current?.click()} onHistory={() => setSubView('history')} /> :
+                subView === 'menu' ? <Menu onUpload={() => fileRef.current?.click()} onHistory={() => setSubView('history')} setSubView={setSubView} /> :
                     subView === 'history' ? <HistoryView history={history} onBack={() => setSubView('menu')} onSelect={(r: SavedReport) => { setStats(r.stats); setRawData(r.rawData); setFileName(r.name); setSubView('dashboard') }} onDelete={async (id: string) => { await supabase.from('logistics_reports').delete().eq('id', id); setHistory(p => p.filter(h => h.id !== id)) }} /> :
-                        stats ? <Dashboard stats={stats} rawData={rawData} fileName={fileName} adSpend={adSpend} setAdSpend={setAdSpend} productPauta={productPauta} setProductPauta={setProductPauta} onBack={() => setSubView('menu')} onUpload={() => fileRef.current?.click()} onModal={setModalType} onDetail={openDetail} onCarrier={setCarrierDetail} onSave={handleSaveReport} /> : null
+                        subView === 'pauta' ? <PautaCalculator onBack={() => setSubView('menu')} /> :
+                            stats ? <Dashboard stats={stats} rawData={rawData} fileName={fileName} adSpend={adSpend} setAdSpend={setAdSpend} productPauta={productPauta} setProductPauta={setProductPauta} onBack={() => setSubView('menu')} onUpload={() => fileRef.current?.click()} onModal={setModalType} onDetail={openDetail} onCarrier={setCarrierDetail} onSave={handleSaveReport} onProductDetail={setSelectedProduct} /> : null
             }
             {modalType && <EfficiencyModal type={modalType} data={rawData} onClose={() => setModalType(null)} />}
             {detailOpen && <DetailModal title={detailTitle} data={getDetailData()} filter={detailFilter} setFilter={setDetailFilter} onClose={() => setDetailOpen(false)} />}
             {carrierDetail && <CarrierDetailModal carrier={carrierDetail} data={rawData} onClose={() => setCarrierDetail(null)} />}
+            {selectedProduct && (
+                <ProductDetailModal
+                    product={selectedProduct.name}
+                    stats={selectedProduct.stats}
+                    pauta={productPauta[selectedProduct.name] || 0}
+                    setPauta={(val: number) => setProductPauta((prev: any) => ({ ...prev, [selectedProduct.name]: val }))}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
         </div>
     )
 }
 
 // ─── MENU ───────────────────────────────────────────────────────────
-function Menu({ onUpload, onHistory }: any) {
+function Menu({ onUpload, onHistory, setSubView }: any) {
     return (
         <div style={{ padding: '60px 24px', maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'white', padding: '8px 20px', borderRadius: 100, boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: 24 }}>
@@ -276,6 +288,23 @@ function Menu({ onUpload, onHistory }: any) {
                         VER REPORTES <ChevronRight size={16} />
                     </div>
                 </div>
+
+                <div
+                    onClick={() => setSubView('pauta')}
+                    className="card shadow-hover"
+                    style={{ padding: '40px 32px', cursor: 'pointer', textAlign: 'left', border: '1px solid #f1f5f9', borderRadius: 28 }}
+                >
+                    <div style={{ width: 64, height: 64, background: '#a855f710', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                        <ChartIcon color="#a855f7" size={32} />
+                    </div>
+                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#1a1a2e', marginBottom: 12 }}>Diario de Pauta</h3>
+                    <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24, lineHeight: 1.5 }}>
+                        Calculadora estratégica para proyectar tus ventas, CPA objetivo y retorno de inversión.
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a855f7', fontWeight: 900, fontSize: 13 }}>
+                        PROYECTAR ESCALADO <ChevronRight size={16} />
+                    </div>
+                </div>
             </div>
 
             <div style={{ marginTop: 60, padding: '24px', background: '#f8fafc', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 20 }}>
@@ -294,7 +323,7 @@ function Menu({ onUpload, onHistory }: any) {
 }
 
 // ─── DASHBOARD ──────────────────────────────────────────────────────
-function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta, setProductPauta, onBack, onUpload, onModal, onDetail, onCarrier, onSave }: any) {
+function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta, setProductPauta, onBack, onUpload, onModal, onDetail, onCarrier, onSave, onProductDetail }: any) {
     const s: LogisticsStats = stats
     const guias = s.guiasGeneradas || 1
     const totalPedidos = s.totalOrders || 1
@@ -570,7 +599,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                                     byProd[p].sent++
                                     if (c.entregado) { byProd[p].entr++; byProd[p].ventas += o.valor_recaudo; byProd[p].costos += o.valor_proveedor; byProd[p].fletes += o.flete }
                                     if (c.transito) byProd[p].tran++
-                                    if (c.devolucion) byProd[p].dev++
+                                    if (c.devolucion) { byProd[p].dev++; byProd[p].fletes += o.flete }
                                     if (c.cancelado) byProd[p].cancels++
                                 })
                                 return Object.entries(byProd).sort((a, b) => b[1].ventas - a[1].ventas).map(([prod, p]) => {
@@ -578,7 +607,7 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                                     const utilidad = p.ventas - p.costos - p.fletes - pauta
                                     const realSent = p.sent - p.cancels
                                     return (
-                                        <tr key={prod} style={{ background: 'white' }}>
+                                        <tr key={prod} style={{ background: 'white', cursor: 'pointer' }} onClick={() => onProductDetail({ name: prod, stats: p })} className="shadow-hover">
                                             <td style={{ ...td, fontWeight: 900, color: '#1a1a2e', paddingLeft: 24, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prod}</td>
                                             <td style={{ ...td, color: '#22c55e', fontWeight: 900 }}>{p.entr}</td>
                                             <td style={{ ...td, color: '#22c55e', fontWeight: 700 }}>{realSent ? ((p.entr / realSent) * 100).toFixed(0) : 0}%</td>
@@ -604,6 +633,13 @@ function Dashboard({ stats, rawData, fileName, adSpend, setAdSpend, productPauta
                     </table>
                 </div>
             </div>
+
+            {/* Performance Chart Section */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, marginTop: 40 }}>
+                <div style={{ width: 6, height: 28, background: '#3b82f6', borderRadius: 4 }}></div>
+                <h2 style={{ fontSize: 22, fontWeight: 950, color: '#1a1a2e' }}>Análisis Geográfico de Transportadoras</h2>
+            </div>
+            <CarrierPerformanceChart data={rawData} />
         </div>
     )
 }
@@ -700,12 +736,40 @@ function getStateColor(estado: string): string {
 
 function DetailModal({ title, data, filter, setFilter, onClose }: any) {
     const [search, setSearch] = useState('')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
+    const [subStatus, setSubStatus] = useState('all')
+
+    const isTransitView = title.toLowerCase().includes('tránsito') || title.toLowerCase().includes('transito')
+    const uniqueStatuses = Array.from(new Set(data.map((o: any) => o.estado_dropi))).sort()
+
+    const parseOrderDate = (d: string) => {
+        if (!d) return null
+        // Handle DD/MM/YYYY or YYYY-MM-DD
+        if (d.includes('/')) {
+            const parts = d.split(' ')[0].split('/')
+            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+        }
+        return new Date(d)
+    }
+
     const headerColor = getStatusColor(title)
-    const filtered = data.filter((o: OrderData) =>
-        (o.id || '').includes(search) || (o.guia || '').includes(search) ||
-        (o.cliente || '').toLowerCase().includes(search.toLowerCase()) ||
-        (o.producto || '').toLowerCase().includes(search.toLowerCase())
-    )
+    const filtered = data.filter((o: OrderData) => {
+        const matchesSearch = (o.id || '').includes(search) || (o.guia || '').includes(search) ||
+            (o.cliente || '').toLowerCase().includes(search.toLowerCase()) ||
+            (o.producto || '').toLowerCase().includes(search.toLowerCase())
+
+        if (!matchesSearch) return false
+
+        if (subStatus !== 'all' && o.estado_dropi !== subStatus) return false
+
+        const orderDate = parseOrderDate(o.fecha)
+        if (orderDate) {
+            if (startDate && orderDate < new Date(startDate)) return false
+            if (endDate && orderDate > new Date(endDate)) return false
+        }
+        return true
+    })
     const conRecaudo = data.filter((o: OrderData) => o.con_recaudo).length
     const sinRecaudo = data.filter((o: OrderData) => !o.con_recaudo).length
 
@@ -742,6 +806,27 @@ function DetailModal({ title, data, filter, setFilter, onClose }: any) {
                         <Search size={13} color="#bbb" />
                         <input placeholder="Buscar ID, Guía, Nombre..." style={{ border: 'none', outline: 'none', fontSize: 13, padding: '9px 0', width: '100%', background: 'transparent' }} value={search} onChange={e => setSearch(e.target.value)} />
                     </div>
+
+                    {isTransitView && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8f8f8', border: '1px solid #eee', borderRadius: 10, padding: '4px 10px' }}>
+                            <Filter size={13} color="#bbb" />
+                            <select
+                                value={subStatus}
+                                onChange={e => setSubStatus(e.target.value)}
+                                style={{ border: 'none', background: 'transparent', fontSize: 11, fontWeight: 700, outline: 'none', color: '#666', cursor: 'pointer' }}
+                            >
+                                <option value="all">TODOS LOS ESTADOS</option>
+                                {uniqueStatuses.map((s: any) => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8f8f8', border: '1px solid #eee', borderRadius: 10, padding: '4px 10px' }}>
+                        <Calendar size={13} color="#bbb" />
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontSize: 11, outline: 'none', color: '#666' }} />
+                        <span style={{ color: '#ccc' }}>→</span>
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ border: 'none', background: 'transparent', fontSize: 11, outline: 'none', color: '#666' }} />
+                    </div>
+
                     <button onClick={downloadCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: '#27ae60', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', color: 'white' }}>
                         <Download size={14} /> Descargar
                     </button>
@@ -789,15 +874,88 @@ function DetailModal({ title, data, filter, setFilter, onClose }: any) {
                                     <div style={{ color: utilidad >= 0 ? '#27ae60' : '#e74c3c', fontWeight: 900, marginTop: 4, fontSize: 13 }}>UTILIDAD ${utilidad.toLocaleString()}</div>
                                 </div>
                             </div>
-                        )
+                        );
                     })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PautaCalculator({ onBack }: any) {
+    const [orders, setOrders] = useState(100)
+    const [cpa, setCpa] = useState(8000)
+    const [price, setPrice] = useState(69900)
+    const [cost, setCost] = useState(25000)
+    const [flete, setFlete] = useState(15000)
+    const [eff, setEff] = useState(80)
+
+    const totalAds = orders * cpa
+    const delivered = Math.round(orders * (eff / 100))
+    const totalRev = delivered * price
+    const totalProdCost = delivered * cost
+    const totalFlete = orders * (flete + (100 - eff) / 100 * flete * 0.5)
+    const totalProfit = totalRev - totalProdCost - totalFlete - totalAds
+    const roas = totalAds > 0 ? totalRev / totalAds : 0
+
+    return (
+        <div style={{ padding: '40px 32px', maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <button onClick={onBack} style={{ width: 42, height: 42, background: 'white', border: '1px solid #eee', borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+                    <h1 style={{ fontSize: 24, fontWeight: 950, color: '#1a1a2e' }}>Diario de Pauta</h1>
+                </div>
+                <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '8px 16px', borderRadius: 100, fontSize: 11, fontWeight: 800 }}>CALCULADORA DE ESCALADO</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 40 }}>
+                {[
+                    { l: 'Pedidos Esperados', v: orders, s: setOrders, i: <Package size={14} /> },
+                    { l: 'CPA Objetivo ($)', v: cpa, s: setCpa, i: <Activity size={14} /> },
+                    { l: 'Precio Venta ($)', v: price, s: setPrice, i: <FileText size={14} /> },
+                    { l: 'Costo Producto ($)', v: cost, s: setCost, i: <Truck size={14} /> },
+                    { l: 'Flete Promedio ($)', v: flete, s: setFlete, i: <Truck size={14} /> },
+                    { l: '% Efectividad', v: eff, s: setEff, i: <CheckCircle2 size={14} /> },
+                ].map(x => (
+                    <div key={x.l} style={{ background: 'white', padding: '24px', borderRadius: 24, border: '1px solid #f1f5f9' }}>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>{x.i} {x.l}</div>
+                        <input
+                            type="number"
+                            value={x.v}
+                            onChange={e => x.s(Number(e.target.value))}
+                            style={{ border: 'none', background: '#f8fafc', padding: '16px 20px', borderRadius: 16, fontSize: 20, fontWeight: 950, width: '100%', outline: 'none', color: '#1a1a2e' }}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            <div style={{ background: '#1a1a2e', borderRadius: 32, padding: '48px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 48, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+                <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', marginBottom: 12 }}>Utilidad Proyectada</div>
+                    <div style={{ fontSize: 64, fontWeight: 950, color: totalProfit >= 0 ? '#22c55e' : '#ef4444', letterSpacing: '-0.04em' }}>
+                        ${totalProfit.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.5, marginTop: 12 }}>Proyección basada en {delivered} entregas ({eff}%)</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 40 }}>
+                    {[
+                        { l: 'Gasto en Ads', v: `$${totalAds.toLocaleString()}`, c: 'white' },
+                        { l: 'ROAS', v: roas.toFixed(2), c: PRIMARY },
+                        { l: 'Ventas Totales', v: `$${totalRev.toLocaleString()}`, c: 'white' },
+                        { l: 'Margen Neto', v: `${totalRev > 0 ? ((totalProfit / totalRev) * 100).toFixed(1) : 0}%`, c: 'white' },
+                    ].map(x => (
+                        <div key={x.l}>
+                            <div style={{ fontSize: 11, fontWeight: 800, opacity: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>{x.l}</div>
+                            <div style={{ fontSize: 28, fontWeight: 950, color: x.c }}>{x.v}</div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
     )
 }
 
-// ─── CARRIER DETAIL MODAL ───────────────────────────────────────────
 function CarrierDetailModal({ carrier, data, onClose }: any) {
     const orders = (data as OrderData[]).filter(o => o.transportadora === carrier)
     const delivered = orders.filter(o => classifyEstado(o.estado_dropi).entregado)
@@ -818,7 +976,7 @@ function CarrierDetailModal({ carrier, data, onClose }: any) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
                 {[['Por Departamento', 'departamento' as keyof OrderData], ['Por Ciudad', 'ciudad' as keyof OrderData], ['Por Producto', 'producto' as keyof OrderData]].map(([label, field]) => (
                     <div key={label as string}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 10 }}>{label as string} ({label === 'Por Producto' ? 'ENT' : 'ENT'})</div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: 10 }}>{label as string}</div>
                         {topBy(arr, field as keyof OrderData).map(([name, count]) => (
                             <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #f5f5f5', fontSize: 12 }}>
                                 <span style={{ color: '#444', fontWeight: 600 }}>{name}</span>
@@ -854,7 +1012,6 @@ function CarrierDetailModal({ carrier, data, onClose }: any) {
     )
 }
 
-// ─── HISTORY ─────────────────────────────────────────────────────────
 function HistoryView({ history, onBack, onSelect, onDelete }: any) {
     return (
         <div style={{ padding: '40px 32px', maxWidth: 860, margin: '0 auto' }}>
@@ -879,11 +1036,81 @@ function HistoryView({ history, onBack, onSelect, onDelete }: any) {
                                 <div style={{ fontSize: 15, fontWeight: 900, color: '#27ae60' }}>${(h.stats?.ventasBrutas || 0).toLocaleString()}</div>
                                 <div style={{ fontSize: 10, color: '#bbb', textTransform: 'uppercase' }}>Ventas</div>
                             </div>
-                            <button onClick={() => onDelete(h.id)} style={{ border: 'none', background: '#fff0f0', color: '#e74c3c', width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                            <button onClick={() => onDelete(h.id)} style={{ border: 'none', background: '#fff0f0', color: '#e74c3c', width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={14} /></button>
                         </div>
                     ))}
                 </div>
             )}
+        </div>
+    )
+}
+
+function ProductDetailModal({ product, stats, pauta, setPauta, onClose }: any) {
+    const p = stats
+    const utility = p.ventas - p.costos - p.fletes - pauta
+    const margin = p.ventas > 0 ? (utility / p.ventas) * 100 : 0
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={onClose} />
+            <div style={{ position: 'relative', width: '90%', maxWidth: 500, background: 'white', borderRadius: 32, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.4)', animation: 'fadeIn 0.3s ease' }}>
+                <div style={{ background: PRIMARY, padding: '32px', color: 'white' }}>
+                    <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ANÁLISIS DE PRODUCTO</div>
+                    <h2 style={{ fontSize: 24, fontWeight: 950, marginTop: 8, lineHeight: 1.2 }}>{product}</h2>
+                </div>
+
+                <div style={{ padding: '32px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32 }}>
+                        <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Ventas Brutas</div>
+                            <div style={{ fontSize: 20, fontWeight: 950, color: '#1a1a2e', marginTop: 4 }}>${p.ventas.toLocaleString()}</div>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Costos (Prod+Flete)</div>
+                            <div style={{ fontSize: 20, fontWeight: 950, color: '#ef4444', marginTop: 4 }}>-${(p.costos + p.fletes).toLocaleString()}</div>
+                        </div>
+                    </div>
+
+                    <div style={{ background: '#f8fafc', borderRadius: 24, padding: '24px', border: '1px solid #f1f5f9', marginBottom: 32 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                            <div style={{ fontSize: 12, fontWeight: 900, color: '#1a1a2e' }}>INVERSIÓN ADS (PAUTA)</div>
+                            <Activity size={14} color={PRIMARY} />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'white', padding: '16px 20px', borderRadius: 16, border: '1px solid #e2e8f0 shadow-sm' }}>
+                            <span style={{ fontSize: 20, fontWeight: 950, color: '#94a3b8' }}>$</span>
+                            <input
+                                autoFocus
+                                className="input-field"
+                                style={{ border: 'none', background: 'none', padding: 0, fontSize: 24, fontWeight: 950, width: '100%', outline: 'none' }}
+                                value={pauta || ''}
+                                onChange={e => setPauta(Number(e.target.value.replace(/[^0-9]/g, '')))}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div>
+                            <div style={{ fontSize: 14, fontWeight: 900, color: '#64748b' }}>UTILIDAD NETA</div>
+                            <div style={{ fontSize: 36, fontWeight: 950, color: utility >= 0 ? '#22c55e' : '#ef4444', marginTop: 4 }}>
+                                ${utility.toLocaleString()}
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Margen</div>
+                            <div style={{ fontSize: 20, fontWeight: 950, color: utility >= 0 ? '#22c55e' : '#ef4444', marginTop: 4 }}>{margin.toFixed(1)}%</div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onClose}
+                        style={{ width: '100%', marginTop: 32, padding: '16px', background: '#1a1a2e', color: 'white', border: 'none', borderRadius: 16, fontWeight: 900, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
+                        onMouseOut={e => e.currentTarget.style.opacity = '1'}
+                    >
+                        LISTO, CERRAR
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }
@@ -895,6 +1122,80 @@ function LoadingSpinner() {
             <div style={{ textAlign: 'center' }}>
                 <h2 style={{ fontSize: 18, fontWeight: 800 }}>Procesando Datos...</h2>
                 <p style={{ color: '#999', fontSize: 13, marginTop: 4 }}>Analizando pedidos, transportadoras y finanzas.</p>
+            </div>
+        </div>
+    )
+}
+
+function CarrierPerformanceChart({ data }: { data: OrderData[] }) {
+    const [groupBy, setGroupBy] = useState<'departamento' | 'ciudad'>('departamento')
+    const [metric, setMetric] = useState<'eff' | 'ret'>('eff')
+
+    const CHART_COLORS = ['#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#10b981', '#64748b']
+
+    const regionMap: Record<string, Record<string, { sent: number; del: number; ret: number }>> = {}
+    const carriersSet = new Set<string>()
+
+    data.forEach(o => {
+        const region = (o[groupBy] || 'N/A').toUpperCase().trim().slice(0, 15)
+        const carrier = (o.transportadora || 'SIN ASIGNAR').toUpperCase().trim()
+        if (!region || region === 'N/A') return
+        carriersSet.add(carrier)
+
+        if (!regionMap[region]) regionMap[region] = {}
+        if (!regionMap[region][carrier]) regionMap[region][carrier] = { sent: 0, del: 0, ret: 0 }
+
+        const c = classifyEstado(o.estado_dropi)
+        regionMap[region][carrier].sent++
+        if (c.entregado) regionMap[region][carrier].del++
+        if (c.devolucion) regionMap[region][carrier].ret++
+    })
+
+    const chartData = Object.entries(regionMap)
+        .map(([region, carrierStats]) => {
+            const row: any = { region }
+            let totalSent = 0
+            Object.entries(carrierStats).forEach(([carrier, s]) => {
+                totalSent += s.sent
+                row[carrier] = metric === 'eff' ? (s.sent > 0 ? (s.del / s.sent) * 100 : 0) : (s.sent > 0 ? (s.ret / s.sent) * 100 : 0)
+            })
+            row.totalSent = totalSent
+            return row
+        })
+        .sort((a, b) => b.totalSent - a.totalSent)
+        .slice(0, 15)
+
+    const carriers = Array.from(carriersSet).sort((a, b) => {
+        const countA = data.filter(o => o.transportadora === a).length
+        const countB = data.filter(o => o.transportadora === b).length
+        return countB - countA
+    }).slice(0, 5)
+
+    return (
+        <div className="card" style={{ padding: '32px', borderRadius: 28, border: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
+                <div style={{ display: 'flex', background: '#f8fafc', padding: '6px', borderRadius: 14, border: '1px solid #f1f5f9' }}>
+                    <button onClick={() => setGroupBy('departamento')} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 800, border: 'none', borderRadius: 10, cursor: 'pointer', background: groupBy === 'departamento' ? 'white' : 'transparent', color: groupBy === 'departamento' ? '#1a1a2e' : '#94a3b8', boxShadow: groupBy === 'departamento' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' }}>DEPARTAMENTOS</button>
+                    <button onClick={() => setGroupBy('ciudad')} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 800, border: 'none', borderRadius: 10, cursor: 'pointer', background: groupBy === 'ciudad' ? 'white' : 'transparent', color: groupBy === 'ciudad' ? '#1a1a2e' : '#94a3b8', boxShadow: groupBy === 'ciudad' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none' }}>CIUDADES</button>
+                </div>
+                <div style={{ display: 'flex', background: '#f8fafc', padding: '6px', borderRadius: 14, border: '1px solid #f1f5f9' }}>
+                    <button onClick={() => setMetric('eff')} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 800, border: 'none', borderRadius: 10, cursor: 'pointer', background: metric === 'eff' ? '#10b981' : 'transparent', color: metric === 'eff' ? 'white' : '#94a3b8' }}>% EFECTIVIDAD</button>
+                    <button onClick={() => setMetric('ret')} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 800, border: 'none', borderRadius: 10, cursor: 'pointer', background: metric === 'ret' ? '#ef4444' : 'transparent', color: metric === 'ret' ? 'white' : '#94a3b8' }}>% DEVOLUCIÓN</button>
+                </div>
+            </div>
+            <div style={{ height: 400, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="region" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} tickFormatter={(v) => `${v}%`} />
+                        <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', padding: '12px 16px' }} itemStyle={{ fontSize: 12, fontWeight: 800 }} labelStyle={{ fontSize: 13, fontWeight: 950, marginBottom: 8, color: '#1a1a2e' }} />
+                        <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: '#94a3b8', paddingBottom: 20 }} />
+                        {carriers.map((carrier, idx) => (
+                            <Bar key={carrier} dataKey={carrier} name={carrier} fill={CHART_COLORS[idx % CHART_COLORS.length]} radius={[6, 6, 0, 0]} barSize={groupBy === 'departamento' ? 20 : 12} />
+                        ))}
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
         </div>
     )
