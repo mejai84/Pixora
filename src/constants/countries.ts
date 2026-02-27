@@ -1,0 +1,87 @@
+export interface Country {
+    code: string;
+    name: string;
+    currency: string;
+    currencyName: string;
+    symbol: string;
+    flag: string;
+    region: 'America' | 'Europe';
+}
+
+export const COUNTRIES: Country[] = [
+    // AMERICA
+    { code: 'AR', name: 'Argentina', currency: 'ARS', currencyName: 'Peso Argentino', symbol: '$', flag: '🇦🇷', region: 'America' },
+    { code: 'BO', name: 'Bolivia', currency: 'BOB', currencyName: 'Boliviano', symbol: 'Bs', flag: '🇧🇴', region: 'America' },
+    { code: 'BR', name: 'Brasil', currency: 'BRL', currencyName: 'Real Brasileño', symbol: 'R$', flag: '🇧🇷', region: 'America' },
+    { code: 'CA', name: 'Canadá', currency: 'CAD', currencyName: 'Dólar Canadiense', symbol: '$', flag: '🇨🇦', region: 'America' },
+    { code: 'CL', name: 'Chile', currency: 'CLP', currencyName: 'Peso Chileno', symbol: '$', flag: '🇨🇱', region: 'America' },
+    { code: 'CO', name: 'Colombia', currency: 'COP', currencyName: 'Peso Colombiano', symbol: '$', flag: '🇨🇴', region: 'America' },
+    { code: 'CR', name: 'Costa Rica', currency: 'CRC', currencyName: 'Colón Costarricense', symbol: '₡', flag: '🇨🇷', region: 'America' },
+    { code: 'CU', name: 'Cuba', currency: 'CUP', currencyName: 'Peso Cubano', symbol: '$', flag: '🇨🇺', region: 'America' },
+    { code: 'DO', name: 'República Dominicana', currency: 'DOP', currencyName: 'Peso Dominicano', symbol: 'RD$', flag: '🇩🇴', region: 'America' },
+    { code: 'EC', name: 'Ecuador', currency: 'USD', currencyName: 'Dólar Estadounidense', symbol: '$', flag: '🇪🇨', region: 'America' },
+    { code: 'SV', name: 'El Salvador', currency: 'USD', currencyName: 'Dólar Estadounidense', symbol: '$', flag: '🇸🇻', region: 'America' },
+    { code: 'GT', name: 'Guatemala', currency: 'GTQ', currencyName: 'Quetzal', symbol: 'Q', flag: '🇬🇹', region: 'America' },
+    { code: 'HN', name: 'Honduras', currency: 'HNL', currencyName: 'Lempira', symbol: 'L', flag: '🇭🇳', region: 'America' },
+    { code: 'MX', name: 'México', currency: 'MXN', currencyName: 'Peso Mexicano', symbol: '$', flag: '🇲🇽', region: 'America' },
+    { code: 'NI', name: 'Nicaragua', currency: 'NIO', currencyName: 'Córdoba', symbol: 'C$', flag: '🇳🇮', region: 'America' },
+    { code: 'PA', name: 'Panamá', currency: 'USD', currencyName: 'Dólar Estadounidense', symbol: '$', flag: '🇵🇦', region: 'America' },
+    { code: 'PY', name: 'Paraguay', currency: 'PYG', currencyName: 'Guaraní', symbol: '₲', flag: '🇵🇾', region: 'America' },
+    { code: 'PE', name: 'Perú', currency: 'PEN', currencyName: 'Sol', symbol: 'S/', flag: '🇵🇪', region: 'America' },
+    { code: 'PR', name: 'Puerto Rico', currency: 'USD', currencyName: 'Dólar Estadounidense', symbol: '$', flag: '🇵🇷', region: 'America' },
+    { code: 'US', name: 'Estados Unidos', currency: 'USD', currencyName: 'Dólar Estadounidense', symbol: '$', flag: '🇺🇸', region: 'America' },
+    { code: 'UY', name: 'Uruguay', currency: 'UYU', currencyName: 'Peso Uruguayo', symbol: '$', flag: '🇺🇾', region: 'America' },
+    { code: 'VE', name: 'Venezuela', currency: 'VES', currencyName: 'Bolívar', symbol: 'Bs.', flag: '🇻🇪', region: 'America' },
+    { code: 'BZ', name: 'Belice', currency: 'BZD', currencyName: 'Dólar Beliceño', symbol: '$', flag: '🇧🇿', region: 'America' },
+    { code: 'JM', name: 'Jamaica', currency: 'JMD', currencyName: 'Dólar Jamaiquino', symbol: '$', flag: '🇯🇲', region: 'America' },
+    { code: 'HT', name: 'Haití', currency: 'HTG', currencyName: 'Gourde', symbol: 'G', flag: '🇭🇹', region: 'America' },
+    { code: 'BS', name: 'Bahamas', currency: 'BSD', currencyName: 'Dólar Bahameño', symbol: '$', flag: '🇧🇸', region: 'America' },
+    { code: 'BB', name: 'Barbados', currency: 'BBD', currencyName: 'Dólar de Barbados', symbol: '$', flag: '🇧🇧', region: 'America' },
+    { code: 'TT', name: 'Trinidad y Tobago', currency: 'TTD', currencyName: 'Dólar de Trinidad y Tobago', symbol: '$', flag: '🇹🇹', region: 'America' },
+    { code: 'GY', name: 'Guyana', currency: 'GYD', currencyName: 'Dólar Guyanés', symbol: '$', flag: '🇬🇾', region: 'America' },
+    { code: 'SR', name: 'Surinam', currency: 'SRD', currencyName: 'Dólar Surinamés', symbol: '$', flag: '🇸🇷', region: 'America' },
+
+
+    // EUROPE
+    { code: 'AL', name: 'Albania', currency: 'ALL', currencyName: 'Lek', symbol: 'L', flag: '🇦🇱', region: 'Europe' },
+    { code: 'DE', name: 'Alemania', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇩🇪', region: 'Europe' },
+    { code: 'AD', name: 'Andorra', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇦🇩', region: 'Europe' },
+    { code: 'AT', name: 'Austria', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇦🇹', region: 'Europe' },
+    { code: 'BE', name: 'Bélgica', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇧🇪', region: 'Europe' },
+    { code: 'BY', name: 'Bielorrusia', currency: 'BYN', currencyName: 'Rublo Bielorruso', symbol: 'Br', flag: '🇧🇾', region: 'Europe' },
+    { code: 'BA', name: 'Bosnia y Herzegovina', currency: 'BAM', currencyName: 'Marco Convertible', symbol: 'KM', flag: '🇧🇦', region: 'Europe' },
+    { code: 'BG', name: 'Bulgaria', currency: 'BGN', currencyName: 'Lev', symbol: 'лв', flag: '🇧🇬', region: 'Europe' },
+    { code: 'HR', name: 'Croacia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇭🇷', region: 'Europe' },
+    { code: 'CY', name: 'Chipre', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇨🇾', region: 'Europe' },
+    { code: 'CZ', name: 'Chequia', currency: 'CZK', currencyName: 'Corona Checa', symbol: 'Kč', flag: '🇨🇿', region: 'Europe' },
+    { code: 'DK', name: 'Dinamarca', currency: 'DKK', currencyName: 'Corona Danesa', symbol: 'kr', flag: '🇩🇰', region: 'Europe' },
+    { code: 'SK', name: 'Eslovaquia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇸🇰', region: 'Europe' },
+    { code: 'SI', name: 'Eslovenia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇸🇮', region: 'Europe' },
+    { code: 'ES', name: 'España', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇪🇸', region: 'Europe' },
+    { code: 'EE', name: 'Estonia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇪🇪', region: 'Europe' },
+    { code: 'FI', name: 'Finlandia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇫🇮', region: 'Europe' },
+    { code: 'FR', name: 'Francia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇫🇷', region: 'Europe' },
+    { code: 'GR', name: 'Grecia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇬🇷', region: 'Europe' },
+    { code: 'HU', name: 'Hungría', currency: 'HUF', currencyName: 'Forinto', symbol: 'Ft', flag: '🇭🇺', region: 'Europe' },
+    { code: 'IE', name: 'Irlanda', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇮🇪', region: 'Europe' },
+    { code: 'IS', name: 'Islandia', currency: 'ISK', currencyName: 'Corona Islandesa', symbol: 'kr', flag: '🇮🇸', region: 'Europe' },
+    { code: 'IT', name: 'Italia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇮🇹', region: 'Europe' },
+    { code: 'LV', name: 'Letonia', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇱🇻', region: 'Europe' },
+    { code: 'LI', name: 'Liechtenstein', currency: 'CHF', currencyName: 'Franco Suizo', symbol: 'CHF', flag: '🇱🇮', region: 'Europe' },
+    { code: 'LT', name: 'Lituania', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇱🇹', region: 'Europe' },
+    { code: 'LU', name: 'Luxemburgo', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇱🇺', region: 'Europe' },
+    { code: 'MT', name: 'Malta', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇲🇹', region: 'Europe' },
+    { code: 'MD', name: 'Moldavia', currency: 'MDL', currencyName: 'Leu Moldavo', symbol: 'L', flag: '🇲🇩', region: 'Europe' },
+    { code: 'MC', name: 'Mónaco', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇲🇨', region: 'Europe' },
+    { code: 'ME', name: 'Montenegro', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇲🇪', region: 'Europe' },
+    { code: 'NO', name: 'Noruega', currency: 'NOK', currencyName: 'Corona Noruega', symbol: 'kr', flag: '🇳🇴', region: 'Europe' },
+    { code: 'NL', name: 'Países Bajos', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇳🇱', region: 'Europe' },
+    { code: 'PL', name: 'Polonia', currency: 'PLN', currencyName: 'Zloty', symbol: 'zł', flag: '🇵🇱', region: 'Europe' },
+    { code: 'PT', name: 'Portugal', currency: 'EUR', currencyName: 'Euro', symbol: '€', flag: '🇵🇹', region: 'Europe' },
+    { code: 'GB', name: 'Reino Unido', currency: 'GBP', currencyName: 'Libra Esterlina', symbol: '£', flag: '🇬🇧', region: 'Europe' },
+    { code: 'RO', name: 'Rumania', currency: 'RON', currencyName: 'Leu Rumano', symbol: 'lei', flag: '🇷🇴', region: 'Europe' },
+    { code: 'RU', name: 'Rusia', currency: 'RUB', currencyName: 'Rublo Ruso', symbol: '₽', flag: '🇷🇺', region: 'Europe' },
+    { code: 'SE', name: 'Suecia', currency: 'SEK', currencyName: 'Corona Sueca', symbol: 'kr', flag: '🇸🇪', region: 'Europe' },
+    { code: 'CH', name: 'Suiza', currency: 'CHF', currencyName: 'Franco Suizo', symbol: 'CHF', flag: '🇨🇭', region: 'Europe' },
+    { code: 'UA', name: 'Ucrania', currency: 'UAH', currencyName: 'Grivna', symbol: '₴', flag: '🇺🇦', region: 'Europe' },
+];
